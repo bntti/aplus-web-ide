@@ -8,6 +8,7 @@ import Course from '../routes/Course';
 import Courses from '../routes/Courses';
 import Exercise from '../routes/Exercise';
 import { setApiToken } from './state/apiToken';
+import Submission from '../routes/Submission';
 
 type Courses = {
     count: number;
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
             {
                 path: 'exercise/:exerciseId?',
                 element: <Exercise />,
+            },
+            {
+                path: 'submission/:submissionId?',
+                element: <Submission />,
             },
         ],
     },

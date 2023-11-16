@@ -38,8 +38,7 @@ const Exercise = (): JSX.Element => {
         axios
             .get(`/api/v2/exercises/${exerciseId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                const newExercise = response.data;
-                setExercise(newExercise);
+                setExercise(response.data);
             })
             .catch(console.error);
         axios
@@ -47,65 +46,61 @@ const Exercise = (): JSX.Element => {
                 headers: { Authorization: `Token ${apiToken}` },
             })
             .then((response) => {
-                const newSubmissions = response.data;
-                setSubmissions(newSubmissions);
+                setSubmissions(response.data);
             })
             .catch(console.error);
     }, [apiToken, exerciseId]);
 
     if (apiToken === '') return <Typography>No api token</Typography>;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
+    if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
-            {exercise === null || submissions === null ? (
-                <Typography>Loading exercise...</Typography>
+            <Typography variant="h3">{exercise.display_name}</Typography>
+            {submissions.submissions_with_points.length === 0 ? (
+                <Typography>No submissions</Typography>
             ) : (
-                <>
-                    <Typography variant="h3">{exercise.display_name}</Typography>
-                    {submissions.submissions_with_points.length === 0 ? (
-                        <Typography>No submissions</Typography>
-                    ) : (
-                        <TableContainer component={Paper}>
-                            <Table component="div">
-                                <TableHead component="div"></TableHead>
-                                <TableCell>Submission #</TableCell>
-                                <TableCell>Score</TableCell>
-                                <TableCell align="right">Submission time</TableCell>
+                <TableContainer component={Paper}>
+                    <Table component="div">
+                        <TableHead component="div"></TableHead>
+                        <TableCell component="div">Submission #</TableCell>
+                        <TableCell component="div">Score</TableCell>
+                        <TableCell align="right" component="div">
+                            Submission time
+                        </TableCell>
 
-                                <TableBody component="div">
-                                    {submissions.submissions_with_points.map((submission) => (
-                                        <TableRow
-                                            key={submission.id}
-                                            component={Link}
-                                            to={`/submission/${submission.id}`}
-                                            style={{ textDecoration: 'none' }}
-                                        >
-                                            <TableCell component="div">
-                                                <Typography>{submission.id}</Typography>
-                                            </TableCell>
-                                            <TableCell component="div">
-                                                <Chip
-                                                    label={`${submission.grade} / ${exercise.max_points}`}
-                                                    color={
-                                                        submission.grade === 0
-                                                            ? 'error'
-                                                            : submission.grade < exercise.max_points
-                                                              ? 'warning'
-                                                              : 'success'
-                                                    }
-                                                    variant="outlined"
-                                                />
-                                            </TableCell>
-                                            <TableCell component="div" align="right">
-                                                <Typography>{submission.submission_time}</Typography>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}
-                </>
+                        <TableBody component="div">
+                            {submissions.submissions_with_points.map((submission) => (
+                                <TableRow
+                                    key={submission.id}
+                                    component={Link}
+                                    to={`/submission/${submission.id}`}
+                                    style={{ textDecoration: 'none' }}
+                                >
+                                    <TableCell component="div">
+                                        <Typography>{submission.id}</Typography>
+                                    </TableCell>
+                                    <TableCell component="div">
+                                        <Chip
+                                            label={`${submission.grade} / ${exercise.max_points}`}
+                                            color={
+                                                submission.grade === 0
+                                                    ? 'error'
+                                                    : submission.grade < exercise.max_points
+                                                      ? 'warning'
+                                                      : 'success'
+                                            }
+                                            variant="outlined"
+                                        />
+                                    </TableCell>
+                                    <TableCell component="div" align="right">
+                                        <Typography>{submission.submission_time}</Typography>
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
             )}
         </>
     );

@@ -19,38 +19,32 @@ const Courses = (): JSX.Element => {
         axios
             .get('/api/v2/courses', { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                const newCourses = response.data;
-                setCourses(newCourses);
+                setCourses(response.data);
             })
             .catch(console.error);
     }, [apiToken]);
 
     if (apiToken === '') return <Typography>No api token</Typography>;
+    if (courses === null) return <Typography>Loading courses...</Typography>;
     return (
-        <>
-            {courses === null ? (
-                <Typography>Loading courses...</Typography>
-            ) : (
-                <TableContainer component={Paper}>
-                    <Table component="div">
-                        <TableBody component="div">
-                            {courses.results.map((course) => (
-                                <TableRow
-                                    key={course.id}
-                                    component={Link}
-                                    to={`/course/${course.id}`}
-                                    style={{ textDecoration: 'none' }}
-                                >
-                                    <TableCell component="div">
-                                        <Typography>{course.name}</Typography>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            )}
-        </>
+        <TableContainer component={Paper}>
+            <Table component="div">
+                <TableBody component="div">
+                    {courses.results.map((course) => (
+                        <TableRow
+                            key={course.id}
+                            component={Link}
+                            to={`/course/${course.id}`}
+                            style={{ textDecoration: 'none' }}
+                        >
+                            <TableCell component="div">
+                                <Typography>{course.name}</Typography>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </TableContainer>
     );
 };
 

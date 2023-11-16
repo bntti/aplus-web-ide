@@ -26,57 +26,50 @@ const Course = (): JSX.Element => {
         axios
             .get(`/api/v2/courses/${courseId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                const newCourse = response.data;
-                setCourse(newCourse);
+                setCourse(response.data);
             })
             .catch(console.error);
         axios
             .get(`/api/v2/courses/${courseId}/exercises`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                const newExercises = response.data;
-                setExercises(newExercises);
+                setExercises(response.data);
             })
             .catch(console.error);
     }, [apiToken, courseId]);
 
     if (apiToken === '') return <Typography>No api token</Typography>;
+    if (course === null || exercises === null) return <Typography>Loading course...</Typography>;
     return (
         <>
-            {course === null || exercises === null ? (
-                <Typography>Loading course...</Typography>
-            ) : (
-                <>
-                    <Typography variant="h2">{course.name}</Typography>
+            <Typography variant="h2">{course.name}</Typography>
 
-                    {exercises.results
-                        .filter((exercise) => exercise.exercises.length > 0)
-                        .map((exercise) => (
-                            <div key={exercise.id}>
-                                <br />
-                                <Typography variant="h5">{exercise.display_name}</Typography>
-                                <br />
-                                <TableContainer component={Paper}>
-                                    <Table component="div">
-                                        <TableBody component="div">
-                                            {exercise.exercises.map((exercise2) => (
-                                                <TableRow
-                                                    key={exercise2.id}
-                                                    component={Link}
-                                                    to={`/exercise/${exercise2.id}`}
-                                                    style={{ textDecoration: 'none' }}
-                                                >
-                                                    <TableCell component="div">
-                                                        <Typography>{exercise2.display_name}</Typography>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </TableContainer>
-                            </div>
-                        ))}
-                </>
-            )}
+            {exercises.results
+                .filter((exercise) => exercise.exercises.length > 0)
+                .map((exercise) => (
+                    <div key={exercise.id}>
+                        <br />
+                        <Typography variant="h5">{exercise.display_name}</Typography>
+                        <br />
+                        <TableContainer component={Paper}>
+                            <Table component="div">
+                                <TableBody component="div">
+                                    {exercise.exercises.map((exercise2) => (
+                                        <TableRow
+                                            key={exercise2.id}
+                                            component={Link}
+                                            to={`/exercise/${exercise2.id}`}
+                                            style={{ textDecoration: 'none' }}
+                                        >
+                                            <TableCell component="div">
+                                                <Typography>{exercise2.display_name}</Typography>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </div>
+                ))}
         </>
     );
 };
