@@ -1,47 +1,74 @@
-import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectApiToken, setApiToken } from './state/apiToken';
+import { Button, Container, TextField } from '@mui/material';
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Outlet, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
+import { selectApiToken } from '../app/state/apiToken';
+import ToolBar from '../components/ToolBar';
+import Course from '../routes/Course';
+import Courses from '../routes/Courses';
+import Exercise from '../routes/Exercise';
+import { setApiToken } from './state/apiToken';
 
 type Courses = {
     count: number;
     results: { id: number; name: string }[];
 };
 
-const App = (): JSX.Element => {
+const Root = (): JSX.Element => {
     const apiToken = useSelector(selectApiToken);
     const dispatch = useDispatch();
     const [newApiToken, setNewApiToken] = useState('');
-    const [courses, setCourses] = useState<Courses>({ count: 0, results: [] });
 
     const addApiToken = (event: React.SyntheticEvent): void => {
         event.preventDefault();
         dispatch(setApiToken(newApiToken));
     };
 
-    useEffect(() => {
-        if (apiToken === '') return;
-        axios
-            .get('/api/v2/courses', { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
-                const newCourses = response.data;
-                console.log(newCourses);
-                setCourses(newCourses);
-            })
-            .catch(console.error);
-    }, [apiToken]);
-
     return (
-        <>
-            <form onSubmit={addApiToken}>
-                <input value={newApiToken} onChange={(event) => setNewApiToken(event.target.value)} />
-                <button type="submit">save</button>
-            </form>
-            {courses.results.map((course) => (
-                <a href={`/courses/${course.id}`}>{course.name}</a>
-            ))}
-        </>
+        <Container>
+            <ToolBar />
+            <br />
+            {apiToken !== '' ? (
+                <></>
+            ) : (
+                <form onSubmit={addApiToken}>
+                    <TextField
+                        label="Api token"
+                        value={newApiToken}
+                        onChange={(event) => setNewApiToken(event.target.value)}
+                    />
+                    <Button variant="contained" type="submit">
+                        save
+                    </Button>
+                </form>
+            )}
+            <Outlet />
+        </Container>
     );
 };
+
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <Root />,
+        children: [
+            {
+                index: true,
+                loader: () => redirect('/courses'),
+            },
+            { path: 'courses', element: <Courses /> },
+            {
+                path: 'course/:courseId?',
+                element: <Course />,
+            },
+            {
+                path: 'exercise/:exerciseId?',
+                element: <Exercise />,
+            },
+        ],
+    },
+]);
+
+const App = (): JSX.Element => <RouterProvider router={router} />;
 
 export default App;
