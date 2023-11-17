@@ -1,12 +1,14 @@
 # A+ Web IDE
 
-### Running project
+A react frontend and IDE for the A+ service.
 
-#### Run the backend
+## Running project
+
+### Run the backend
 
 Clone [Aplus manual](https://github.com/apluslms/aplus-manual) and run it following the instructions provided in its `README.md`.
 
-#### Run the frontend
+### Run the frontend
 
 Install packages
 
