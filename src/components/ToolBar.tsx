@@ -1,17 +1,21 @@
-import { AppBar, Button, Toolbar } from '@mui/material';
+import { AppBar, Button, Toolbar, Typography } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { selectApiToken } from '../app/state/apiToken';
+import { selectUser } from '../app/state/user';
 
 const ToolBar = (): JSX.Element => {
     const apiToken = useSelector(selectApiToken);
+    const user = useSelector(selectUser);
     return (
         <AppBar position="static">
             <Toolbar>
-                <Button color="inherit">
-                    <Link to="/courses">Courses</Link>
+                <Button color="inherit" component={Link} to="/courses">
+                    Courses
                 </Button>
-                <Button color="inherit">{apiToken ? <em>Logged in</em> : <em>Not Logged in</em>}</Button>
+                <Typography color="inherit" sx={{ marginLeft: 'auto' }}>
+                    {apiToken ? <em>{user.full_name}</em> : <em>Not Logged in</em>}
+                </Typography>
             </Toolbar>
         </AppBar>
     );

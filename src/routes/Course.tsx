@@ -1,9 +1,9 @@
-import axios from 'axios';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
+import axios, { AxiosError } from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link, useParams } from 'react-router-dom';
 import { selectApiToken } from '../app/state/apiToken';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
 
 type CourseT = {
     id: number;
@@ -20,24 +20,29 @@ const Course = (): JSX.Element => {
     const apiToken = useSelector(selectApiToken);
     const [course, setCourse] = useState<CourseT | null>(null);
     const [exercises, setExercises] = useState<Exercises | null>(null);
+    const [hasAccess, setHasAccess] = useState<boolean>(true);
 
     useEffect(() => {
         if (apiToken === '') return;
         axios
             .get(`/api/v2/courses/${courseId}`, { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
+            .then(async (response) => {
                 setCourse(response.data);
+                setHasAccess(true);
+                const exerciseResponse = await axios.get(`/api/v2/courses/${courseId}/exercises`, {
+                    headers: { Authorization: `Token ${apiToken}` },
+                });
+                setExercises(exerciseResponse.data);
+                setHasAccess(true);
             })
-            .catch(console.error);
-        axios
-            .get(`/api/v2/courses/${courseId}/exercises`, { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
-                setExercises(response.data);
-            })
-            .catch(console.error);
+            .catch((error: AxiosError) => {
+                if (error.response && error.response.request.status === 403) setHasAccess(false);
+                else console.error(error);
+            });
     }, [apiToken, courseId]);
 
     if (apiToken === '') return <Typography>No api token</Typography>;
+    if (!hasAccess) return <Typography>You don't have access to this course</Typography>;
     if (course === null || exercises === null) return <Typography>Loading course...</Typography>;
     return (
         <>

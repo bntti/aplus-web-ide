@@ -1,5 +1,5 @@
 import { Button, Container, TextField } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
 import { selectApiToken } from '../app/state/apiToken';
@@ -9,6 +9,8 @@ import Courses from '../routes/Courses';
 import Exercise from '../routes/Exercise';
 import { setApiToken } from './state/apiToken';
 import Submission from '../routes/Submission';
+import axios from 'axios';
+import { setUser } from './state/user';
 
 type Courses = {
     count: number;
@@ -24,14 +26,21 @@ const Root = (): JSX.Element => {
         event.preventDefault();
         dispatch(setApiToken(newApiToken));
     };
+    useEffect(() => {
+        if (apiToken === '') return;
+        axios
+            .get('/api/v2/users/me', { headers: { Authorization: `Token ${apiToken}` } })
+            .then((response) => {
+                dispatch(setUser(response.data));
+            })
+            .catch(console.error);
+    }, [dispatch, apiToken]);
 
     return (
         <Container>
             <ToolBar />
             <br />
-            {apiToken !== '' ? (
-                <></>
-            ) : (
+            {apiToken === '' && (
                 <form onSubmit={addApiToken}>
                     <TextField
                         label="Api token"

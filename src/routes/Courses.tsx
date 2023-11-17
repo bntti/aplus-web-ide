@@ -1,9 +1,9 @@
+import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectApiToken } from '../app/state/apiToken';
 import { Link } from 'react-router-dom';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
+import { selectApiToken } from '../app/state/apiToken';
 
 type CoursesT = {
     count: number;
