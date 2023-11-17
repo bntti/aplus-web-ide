@@ -15,7 +15,7 @@ import {
     Tabs,
     Typography,
 } from '@mui/material';
-import ReactCodeMirror from '@uiw/react-codemirror';
+import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -110,6 +110,12 @@ const Exercise = (): JSX.Element => {
             .catch(console.error);
     };
 
+    const editorTheme = EditorView.theme({
+        '&.cm-editor.cm-focused': {
+            outline: '1px solid #c0c0c0',
+        },
+    });
+
     if (apiToken === '') return <Typography>No api token</Typography>;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
@@ -135,6 +141,7 @@ const Exercise = (): JSX.Element => {
                     onChange={(val) => {
                         setCode(val);
                     }}
+                    theme={editorTheme}
                     extensions={language === 'python' ? [python()] : language === 'javascript' ? [javascript()] : []}
                 />
                 <br />
