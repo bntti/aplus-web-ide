@@ -1,9 +1,8 @@
 import { Chip, Container, Paper, Typography } from '@mui/material';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { selectApiToken } from '../app/state/apiToken';
+import { ApiTokenContext } from '../app/StateProvider';
 
 type SubmissionT = {
     id: number;
@@ -16,12 +15,12 @@ type SubmissionT = {
 
 const Submission = (): JSX.Element => {
     const { submissionId } = useParams();
+    const { apiToken } = useContext(ApiTokenContext);
 
-    const apiToken = useSelector(selectApiToken);
     const [submission, setSubmission] = useState<SubmissionT | null>(null);
 
     useEffect(() => {
-        if (apiToken === '') return;
+        if (apiToken === null) return;
         axios
             .get(`/api/v2/submissions/${submissionId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
@@ -30,7 +29,7 @@ const Submission = (): JSX.Element => {
             .catch(console.error);
     }, [apiToken, submissionId]);
 
-    if (apiToken === '') return <Typography>No api token</Typography>;
+    if (apiToken === null) return <Typography>No api token</Typography>;
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>

@@ -1,16 +1,13 @@
 import { Button, Container, TextField } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import axios from 'axios';
+import { useContext, useEffect, useState } from 'react';
 import { Outlet, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
-import { selectApiToken } from '../app/state/apiToken';
 import ToolBar from '../components/ToolBar';
 import Course from '../routes/Course';
 import Courses from '../routes/Courses';
 import Exercise from '../routes/Exercise';
-import { setApiToken } from './state/apiToken';
 import Submission from '../routes/Submission';
-import axios from 'axios';
-import { setUser } from './state/user';
+import { ApiTokenContext, UserContext } from './StateProvider';
 
 type Courses = {
     count: number;
@@ -18,29 +15,29 @@ type Courses = {
 };
 
 const Root = (): JSX.Element => {
-    const apiToken = useSelector(selectApiToken);
-    const dispatch = useDispatch();
+    const { apiToken, setApiToken } = useContext(ApiTokenContext);
+    const { setUser } = useContext(UserContext);
     const [newApiToken, setNewApiToken] = useState('');
 
     const addApiToken = (event: React.SyntheticEvent): void => {
         event.preventDefault();
-        dispatch(setApiToken(newApiToken));
+        setApiToken(newApiToken);
     };
     useEffect(() => {
-        if (apiToken === '') return;
+        if (apiToken === null) return;
         axios
             .get('/api/v2/users/me', { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                dispatch(setUser(response.data));
+                setUser(response.data);
             })
             .catch(console.error);
-    }, [dispatch, apiToken]);
+    }, [setUser, apiToken]);
 
     return (
         <Container>
             <ToolBar />
             <br />
-            {apiToken === '' && (
+            {apiToken === null && (
                 <form onSubmit={addApiToken}>
                     <TextField
                         label="Api token"

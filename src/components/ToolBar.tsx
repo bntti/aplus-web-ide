@@ -1,12 +1,11 @@
 import { AppBar, Button, Toolbar, Typography } from '@mui/material';
-import { useSelector } from 'react-redux';
+import { useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { selectApiToken } from '../app/state/apiToken';
-import { selectUser } from '../app/state/user';
+import { ApiTokenContext, UserContext } from '../app/StateProvider';
 
 const ToolBar = (): JSX.Element => {
-    const apiToken = useSelector(selectApiToken);
-    const user = useSelector(selectUser);
+    const { apiToken } = useContext(ApiTokenContext);
+    const { user } = useContext(UserContext);
     return (
         <AppBar position="static">
             <Toolbar>

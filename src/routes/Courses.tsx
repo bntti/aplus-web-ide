@@ -1,9 +1,8 @@
 import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { selectApiToken } from '../app/state/apiToken';
+import { ApiTokenContext } from '../app/StateProvider';
 
 type CoursesT = {
     count: number;
@@ -11,11 +10,12 @@ type CoursesT = {
 };
 
 const Courses = (): JSX.Element => {
-    const apiToken = useSelector(selectApiToken);
+    const { apiToken } = useContext(ApiTokenContext);
+
     const [courses, setCourses] = useState<CoursesT | null>(null);
 
     useEffect(() => {
-        if (apiToken === '') return;
+        if (apiToken === null) return;
         axios
             .get('/api/v2/courses', { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
@@ -24,7 +24,7 @@ const Courses = (): JSX.Element => {
             .catch(console.error);
     }, [apiToken]);
 
-    if (apiToken === '') return <Typography>No api token</Typography>;
+    if (apiToken === null) return <Typography>No api token</Typography>;
     if (courses === null) return <Typography>Loading courses...</Typography>;
     return (
         <TableContainer component={Paper}>

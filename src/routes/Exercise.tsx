@@ -17,10 +17,9 @@ import {
 } from '@mui/material';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { selectApiToken } from '../app/state/apiToken';
+import { ApiTokenContext } from '../app/StateProvider';
 
 type ExerciseT = {
     display_name: string;
@@ -65,8 +64,8 @@ const a11yProps = (index: number): { id: string; 'aria-controls': string } => {
 
 const Exercise = (): JSX.Element => {
     const { exerciseId } = useParams();
+    const { apiToken } = useContext(ApiTokenContext);
 
-    const apiToken = useSelector(selectApiToken);
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -74,7 +73,7 @@ const Exercise = (): JSX.Element => {
     const [language, setLanguage] = useState<string | null>(null);
 
     useEffect(() => {
-        if (apiToken === '') return;
+        if (apiToken === null) return;
         axios
             .get(`/api/v2/exercises/${exerciseId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
@@ -116,7 +115,7 @@ const Exercise = (): JSX.Element => {
         },
     });
 
-    if (apiToken === '') return <Typography>No api token</Typography>;
+    if (apiToken === null) return <Typography>No api token</Typography>;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
     return (
