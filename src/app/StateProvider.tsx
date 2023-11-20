@@ -11,12 +11,15 @@ type User = { full_name: string | null; enrolled_courses: { id: number; name: st
 type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
 export const UserContext = React.createContext<UserContextT>({} as UserContextT);
 
+type ThemeContextT = { colorMode: { toggleTheme: () => void } };
+export const ThemeContext = React.createContext<ThemeContextT>({} as ThemeContextT);
+
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
-    const [user, setUser] = useState<User>({ full_name: null, enrolled_courses: [] });
     const [apiToken, setApiToken] = useState<ApiToken>(null);
+    const [user, setUser] = useState<User>({ full_name: null, enrolled_courses: [] });
     return (
-        <ApiTokenContext.Provider value={{ apiToken: apiToken, setApiToken: setApiToken }}>
-            <UserContext.Provider value={{ user: user, setUser: setUser }}>{children}</UserContext.Provider>
+        <ApiTokenContext.Provider value={{ apiToken, setApiToken }}>
+            <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
         </ApiTokenContext.Provider>
     );
 };

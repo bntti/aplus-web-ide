@@ -50,9 +50,9 @@ const Course = (): JSX.Element => {
                 .filter((exercise) => exercise.exercises.length > 0)
                 .map((exercise) => (
                     <div key={exercise.id}>
-                        <br />
-                        <Typography variant="h5">{exercise.display_name}</Typography>
-                        <br />
+                        <Typography variant="h5" sx={{ mb: 2, mt: 2, ml: 1 }}>
+                            {exercise.display_name}
+                        </Typography>
                         <TableContainer component={Paper}>
                             <Table component="div">
                                 <TableBody component="div">

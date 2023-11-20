@@ -1,7 +1,7 @@
-import { Chip, Container, Paper, Typography } from '@mui/material';
+import { Button, Chip, Container, Paper, Typography, useTheme } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 
 type SubmissionT = {
@@ -14,6 +14,8 @@ type SubmissionT = {
 };
 
 const Submission = (): JSX.Element => {
+    const currentTheme = useTheme();
+    const navigate = useNavigate();
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
 
@@ -44,25 +46,29 @@ const Submission = (): JSX.Element => {
                           ? 'warning'
                           : 'success'
                 }
-                variant="outlined"
+                variant={currentTheme.palette.mode === 'dark' ? 'filled' : 'outlined'}
             />
-            <br />
-            <br />
-            <Typography variant="h5">Feedback:</Typography>
+            <Typography variant="h5" sx={{ mt: 2 }}>
+                Feedback:
+            </Typography>
             <Container
                 component={Paper}
                 sx={{
                     display: 'block',
-                    bgcolor: '#fff',
-                    color: 'grey.800',
+                    mt: 1,
+                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#101010' : '#fff'),
+                    color: (theme) => (theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'),
                     border: '1px solid',
-                    borderColor: 'grey.500',
+                    borderColor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300'),
                     borderRadius: 2,
                     fontSize: '0.875rem',
                 }}
             >
-                <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '')}</pre>
+                <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '').trim()}</pre>
             </Container>
+            <Button variant="contained" sx={{ mt: 1 }} onClick={() => navigate(-1)}>
+                Go back
+            </Button>
         </>
     );
 };

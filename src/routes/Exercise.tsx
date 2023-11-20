@@ -14,7 +14,9 @@ import {
     TableRow,
     Tabs,
     Typography,
+    useTheme,
 } from '@mui/material';
+import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
@@ -65,6 +67,7 @@ const a11yProps = (index: number): { id: string; 'aria-controls': string } => {
 const Exercise = (): JSX.Element => {
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const theme = useTheme();
 
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
@@ -109,11 +112,24 @@ const Exercise = (): JSX.Element => {
             .catch(console.error);
     };
 
-    const editorTheme = EditorView.theme({
+    const baseLightTheme = EditorView.theme({
+        '&.cm-editor': {
+            outline: '1px solid rgba(0, 0, 0, 0.12)',
+        },
         '&.cm-editor.cm-focused': {
-            outline: '1px solid #c0c0c0',
+            outline: '1px solid rgba(0, 0, 0, 0.26)',
         },
     });
+    const baseDarkTheme = EditorView.theme({
+        '&.cm-editor': {
+            outline: '1px solid rgba(255, 255, 255, 0.08)',
+        },
+        '&.cm-editor.cm-focused': {
+            outline: '1px solid rgba(255, 255, 255, 0.16)',
+        },
+    });
+    const editorLightTheme = githubLight;
+    const editorDarkTheme = githubDark;
 
     if (apiToken === null) return <Typography>No api token</Typography>;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
@@ -140,11 +156,13 @@ const Exercise = (): JSX.Element => {
                     onChange={(val) => {
                         setCode(val);
                     }}
-                    theme={editorTheme}
-                    extensions={language === 'python' ? [python()] : language === 'javascript' ? [javascript()] : []}
+                    theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
+                    extensions={[
+                        theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
+                        ...(language === 'python' ? [python()] : language === 'javascript' ? [javascript()] : []),
+                    ]}
                 />
-                <br />
-                <Button variant="contained" onClick={submitCode}>
+                <Button variant="contained" sx={{ mt: 1 }} onClick={submitCode}>
                     Submit
                 </Button>
             </CustomTabPanel>
@@ -183,7 +201,7 @@ const Exercise = (): JSX.Element => {
                                                           ? 'warning'
                                                           : 'success'
                                                 }
-                                                variant="outlined"
+                                                variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                                             />
                                         </TableCell>
                                         <TableCell component="div" align="right">
