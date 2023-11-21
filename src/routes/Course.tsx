@@ -1,7 +1,7 @@
 import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
 import axios, { AxiosError } from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, Navigate, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 
 type CourseT = {
@@ -39,7 +39,7 @@ const Course = (): JSX.Element => {
             });
     }, [apiToken, courseId]);
 
-    if (apiToken === null) return <Typography>No api token</Typography>;
+    if (apiToken === null) return <Navigate replace to="/courses" />;
     if (!hasAccess) return <Typography>You don't have access to this course</Typography>;
     if (course === null || exercises === null) return <Typography>Loading course...</Typography>;
     return (

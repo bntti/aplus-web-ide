@@ -19,8 +19,8 @@ import {
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
-import { useContext, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useCallback, useContext, useEffect, useState } from 'react';
+import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 
 type ExerciseT = {
@@ -33,6 +33,7 @@ type ExerciseT = {
 
 type Submissions = {
     submissions_with_points: { id: number; submission_time: string; grade: number }[];
+    points: number;
 };
 
 interface TabPanelProps {
@@ -65,6 +66,7 @@ const a11yProps = (index: number): { id: string; 'aria-controls': string } => {
 };
 
 const Exercise = (): JSX.Element => {
+    const { state } = useLocation();
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const theme = useTheme();
@@ -74,6 +76,17 @@ const Exercise = (): JSX.Element => {
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [code, setCode] = useState<string>('');
     const [language, setLanguage] = useState<string | null>(null);
+
+    const getSubmissions = useCallback((): void => {
+        axios
+            .get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            })
+            .then((response) => {
+                setSubmissions(response.data);
+            })
+            .catch(console.error);
+    }, [apiToken, exerciseId]);
 
     useEffect(() => {
         if (apiToken === null) return;
@@ -92,15 +105,15 @@ const Exercise = (): JSX.Element => {
                 }
             })
             .catch(console.error);
-        axios
-            .get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            })
-            .then((response) => {
-                setSubmissions(response.data);
-            })
-            .catch(console.error);
-    }, [apiToken, exerciseId]);
+        getSubmissions();
+    }, [apiToken, exerciseId, getSubmissions]);
+
+    useEffect(() => {
+        if (state && state.showSubmissions && activeIndex !== 1) {
+            setActiveIndex(1);
+            state.showSubmissions = false;
+        }
+    }, [state, activeIndex]);
 
     const submitCode = (): void => {
         const formData = new FormData();
@@ -108,6 +121,10 @@ const Exercise = (): JSX.Element => {
         axios
             .post(`/api/v2/exercises/${exerciseId}/submissions/submit`, formData, {
                 headers: { Authorization: `Token ${apiToken}` },
+            })
+            .then(() => {
+                getSubmissions();
+                setActiveIndex(1);
             })
             .catch(console.error);
     };
@@ -130,13 +147,35 @@ const Exercise = (): JSX.Element => {
     });
     const editorLightTheme = githubLight;
     const editorDarkTheme = githubDark;
+    const numSubmissions = submissions ? submissions.submissions_with_points.length : 0;
 
-    if (apiToken === null) return <Typography>No api token</Typography>;
+    if (apiToken === null) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
             <Typography variant="h3">{exercise.display_name}</Typography>
+            {numSubmissions > 0 ? (
+                <Typography>
+                    Submissions done {numSubmissions}/{exercise.max_submissions}
+                </Typography>
+            ) : (
+                <Typography>Max submissions {exercise.max_submissions}</Typography>
+            )}
+            {numSubmissions > 0 && (
+                <Chip
+                    sx={{ mt: 0.5, mb: 2 }}
+                    label={`${submissions.points} / ${exercise.max_points}`}
+                    color={
+                        submissions.points === 0
+                            ? 'error'
+                            : submissions.points < exercise.max_points
+                              ? 'warning'
+                              : 'success'
+                    }
+                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+                />
+            )}
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs
                     aria-label="basic tabs example"
@@ -149,22 +188,32 @@ const Exercise = (): JSX.Element => {
             </Box>
 
             <CustomTabPanel value={activeIndex} index={0}>
-                {language !== null && <Typography>Detected language {language}</Typography>}
-                <ReactCodeMirror
-                    value={code}
-                    height="700px"
-                    onChange={(val) => {
-                        setCode(val);
-                    }}
-                    theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
-                    extensions={[
-                        theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
-                        ...(language === 'python' ? [python()] : language === 'javascript' ? [javascript()] : []),
-                    ]}
-                />
-                <Button variant="contained" sx={{ mt: 1 }} onClick={submitCode}>
-                    Submit
-                </Button>
+                {numSubmissions < exercise.max_submissions ? (
+                    <>
+                        {language !== null && <Typography>Detected language {language}</Typography>}
+                        <ReactCodeMirror
+                            value={code}
+                            height="700px"
+                            onChange={(val) => {
+                                setCode(val);
+                            }}
+                            theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
+                            extensions={[
+                                theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
+                                ...(language === 'python'
+                                    ? [python()]
+                                    : language === 'javascript'
+                                      ? [javascript()]
+                                      : []),
+                            ]}
+                        />
+                        <Button variant="contained" sx={{ mt: 1 }} onClick={submitCode}>
+                            Submit
+                        </Button>
+                    </>
+                ) : (
+                    <Typography>All {exercise.max_submissions} submissions done.</Typography>
+                )}
             </CustomTabPanel>
 
             <CustomTabPanel value={activeIndex} index={1}>
@@ -173,15 +222,15 @@ const Exercise = (): JSX.Element => {
                 ) : (
                     <TableContainer component={Paper}>
                         <Table component="div">
-                            <TableHead component="div"></TableHead>
-                            <TableCell component="div">Submission #</TableCell>
-                            <TableCell component="div">Score</TableCell>
-                            <TableCell align="right" component="div">
-                                Submission time
-                            </TableCell>
-
+                            <TableHead component="div">
+                                <TableCell component="div">Submission #</TableCell>
+                                <TableCell component="div">Score</TableCell>
+                                <TableCell component="div" align="right">
+                                    Submission time
+                                </TableCell>
+                            </TableHead>
                             <TableBody component="div">
-                                {submissions.submissions_with_points.map((submission) => (
+                                {submissions.submissions_with_points.map((submission, index) => (
                                     <TableRow
                                         key={submission.id}
                                         component={Link}
@@ -189,7 +238,7 @@ const Exercise = (): JSX.Element => {
                                         style={{ textDecoration: 'none' }}
                                     >
                                         <TableCell component="div">
-                                            <Typography>{submission.id}</Typography>
+                                            <Typography>{numSubmissions - index}</Typography>
                                         </TableCell>
                                         <TableCell component="div">
                                             <Chip
@@ -205,7 +254,9 @@ const Exercise = (): JSX.Element => {
                                             />
                                         </TableCell>
                                         <TableCell component="div" align="right">
-                                            <Typography>{submission.submission_time}</Typography>
+                                            <Typography>
+                                                {new Date(submission.submission_time).toLocaleString()}
+                                            </Typography>
                                         </TableCell>
                                     </TableRow>
                                 ))}
