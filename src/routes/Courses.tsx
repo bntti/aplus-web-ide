@@ -2,7 +2,7 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typograph
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ApiTokenContext } from '../app/StateProvider';
+import { ApiTokenContext, UserContext } from '../app/StateProvider';
 
 type CoursesT = {
     count: number;
@@ -11,6 +11,7 @@ type CoursesT = {
 
 const Courses = (): JSX.Element => {
     const { apiToken } = useContext(ApiTokenContext);
+    const { user } = useContext(UserContext);
 
     const [courses, setCourses] = useState<CoursesT | null>(null);
 
@@ -30,7 +31,7 @@ const Courses = (): JSX.Element => {
         <TableContainer component={Paper}>
             <Table component="div">
                 <TableBody component="div">
-                    {courses.results.map((course) => (
+                    {user.enrolled_courses.map((course) => (
                         <TableRow
                             key={course.id}
                             component={Link}
