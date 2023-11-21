@@ -25,8 +25,8 @@ const Courses = (): JSX.Element => {
             .catch(console.error);
     }, [apiToken]);
 
-    if (apiToken === null) return <Typography>No api token</Typography>;
-    if (courses === null) return <Typography>Loading courses...</Typography>;
+    if (apiToken === null) return <></>;
+    if (user === null || courses === null) return <Typography>Loading courses...</Typography>;
     return (
         <TableContainer component={Paper}>
             <Table component="div">

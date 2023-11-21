@@ -1,4 +1,4 @@
-import { Button, Container, CssBaseline, TextField, ThemeProvider, createTheme } from '@mui/material';
+import { Button, Container, CssBaseline, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
@@ -50,18 +50,23 @@ const Root = (): JSX.Element => {
                 <CssBaseline enableColorScheme />
                 <Container>
                     <ToolBar />
-                    <br />
                     {apiToken === null && (
-                        <form onSubmit={addApiToken}>
-                            <TextField
-                                label="Api token"
-                                value={newApiToken}
-                                onChange={(event) => setNewApiToken(event.target.value)}
-                            />
-                            <Button variant="contained" type="submit">
-                                save
-                            </Button>
-                        </form>
+                        <>
+                            <Typography variant="h5" sx={{ mb: 2 }}>
+                                Login
+                            </Typography>
+                            <form onSubmit={addApiToken}>
+                                <TextField
+                                    label="Api token"
+                                    value={newApiToken}
+                                    onChange={(event) => setNewApiToken(event.target.value)}
+                                />
+                                <br />
+                                <Button variant="contained" type="submit" sx={{ mt: 0.5 }}>
+                                    save
+                                </Button>
+                            </form>
+                        </>
                     )}
                     <Outlet />
                 </Container>

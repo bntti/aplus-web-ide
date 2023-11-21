@@ -7,7 +7,7 @@ type ApiTokenContextT = {
 };
 export const ApiTokenContext = React.createContext<ApiTokenContextT>({} as ApiTokenContextT);
 
-type User = { full_name: string | null; enrolled_courses: { id: number; name: string }[] };
+type User = { full_name: string; enrolled_courses: { id: number; name: string }[] } | null;
 type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
 export const UserContext = React.createContext<UserContextT>({} as UserContextT);
 
@@ -16,7 +16,7 @@ export const ThemeContext = React.createContext<ThemeContextT>({} as ThemeContex
 
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const [apiToken, setApiToken] = useState<ApiToken>(null);
-    const [user, setUser] = useState<User>({ full_name: null, enrolled_courses: [] });
+    const [user, setUser] = useState<User>(null);
     return (
         <ApiTokenContext.Provider value={{ apiToken, setApiToken }}>
             <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>

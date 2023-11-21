@@ -3,23 +3,44 @@ import { AppBar, Button, IconButton, Toolbar, Typography, useTheme } from '@mui/
 import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiTokenContext, ThemeContext, UserContext } from '../app/StateProvider';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
     const { colorMode } = useContext(ThemeContext);
-    const { apiToken } = useContext(ApiTokenContext);
-    const { user } = useContext(UserContext);
+    const { apiToken, setApiToken } = useContext(ApiTokenContext);
+    const { user, setUser } = useContext(UserContext);
     return (
-        <AppBar position="static">
+        <AppBar position="static" sx={{ mb: 2.5 }}>
             <Toolbar>
                 <Button color="inherit" component={Link} to="/courses">
                     Courses
                 </Button>
-                <IconButton sx={{ ml: 1, marginLeft: 'auto' }} onClick={colorMode.toggleTheme} color="inherit">
+                <IconButton sx={{ marginLeft: 'auto' }} onClick={colorMode.toggleTheme} color="inherit" size="large">
                     {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness3 />}
                 </IconButton>
 
-                <Typography color="inherit">{apiToken ? <em>{user.full_name}</em> : <em>Not Logged in</em>}</Typography>
+                {apiToken === null ? (
+                    <Typography color="inherit">
+                        <em>Not Logged in</em>
+                    </Typography>
+                ) : (
+                    <>
+                        <Typography color="inherit">
+                            {user ? <em>{user.full_name}</em> : <em>Loading user...</em>}
+                        </Typography>
+
+                        <IconButton
+                            color="inherit"
+                            onClick={() => {
+                                setApiToken(null), setUser(null);
+                            }}
+                            size="large"
+                        >
+                            <LogoutIcon />
+                        </IconButton>
+                    </>
+                )}
             </Toolbar>
         </AppBar>
     );
