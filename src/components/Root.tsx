@@ -63,7 +63,7 @@ const Root = (): JSX.Element => {
                                 />
                                 <br />
                                 <Button variant="contained" type="submit" sx={{ mt: 0.5 }}>
-                                    save
+                                    Log in
                                 </Button>
                             </form>
                         </>

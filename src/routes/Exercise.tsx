@@ -1,8 +1,5 @@
-import { javascript } from '@codemirror/lang-javascript';
-import { python } from '@codemirror/lang-python';
 import {
     Box,
-    Button,
     Chip,
     Paper,
     Tab,
@@ -16,12 +13,11 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
-import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
+import CodeEditor from '../components/CodeEditor';
 
 type ExerciseT = {
     display_name: string;
@@ -74,8 +70,6 @@ const Exercise = (): JSX.Element => {
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
-    const [code, setCode] = useState<string>('');
-    const [language, setLanguage] = useState<string | null>(null);
 
     const getSubmissions = useCallback((): void => {
         axios
@@ -95,14 +89,6 @@ const Exercise = (): JSX.Element => {
             .then((response) => {
                 const exerciseData: ExerciseT = response.data;
                 setExercise(exerciseData);
-                const filename = exerciseData.exercise_info.form_spec[0].title;
-                if (filename.endsWith('.py')) {
-                    setLanguage('python');
-                } else if (filename.endsWith('.js')) {
-                    setLanguage('javascript');
-                } else {
-                    setLanguage(null);
-                }
             })
             .catch(console.error);
         getSubmissions();
@@ -115,41 +101,14 @@ const Exercise = (): JSX.Element => {
         }
     }, [state, activeIndex]);
 
-    const submitCode = (): void => {
-        const formData = new FormData();
-        formData.append('file1', new Blob([code]));
-        axios
-            .post(`/api/v2/exercises/${exerciseId}/submissions/submit`, formData, {
-                headers: { Authorization: `Token ${apiToken}` },
-            })
-            .then(() => {
-                getSubmissions();
-                setActiveIndex(1);
-            })
-            .catch(console.error);
+    const callback = (): void => {
+        getSubmissions();
+        setActiveIndex(1);
     };
 
-    const baseLightTheme = EditorView.theme({
-        '&.cm-editor': {
-            outline: '1px solid rgba(0, 0, 0, 0.12)',
-        },
-        '&.cm-editor.cm-focused': {
-            outline: '1px solid rgba(0, 0, 0, 0.26)',
-        },
-    });
-    const baseDarkTheme = EditorView.theme({
-        '&.cm-editor': {
-            outline: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-        '&.cm-editor.cm-focused': {
-            outline: '1px solid rgba(255, 255, 255, 0.16)',
-        },
-    });
-    const editorLightTheme = githubLight;
-    const editorDarkTheme = githubDark;
     const numSubmissions = submissions ? submissions.submissions_with_points.length : 0;
 
-    if (apiToken === null) return <Navigate replace to="/courses" />;
+    if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
     return (
@@ -189,28 +148,7 @@ const Exercise = (): JSX.Element => {
 
             <CustomTabPanel value={activeIndex} index={0}>
                 {numSubmissions < exercise.max_submissions ? (
-                    <>
-                        {language !== null && <Typography>Detected language {language}</Typography>}
-                        <ReactCodeMirror
-                            value={code}
-                            height="700px"
-                            onChange={(val) => {
-                                setCode(val);
-                            }}
-                            theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
-                            extensions={[
-                                theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
-                                ...(language === 'python'
-                                    ? [python()]
-                                    : language === 'javascript'
-                                      ? [javascript()]
-                                      : []),
-                            ]}
-                        />
-                        <Button variant="contained" sx={{ mt: 1 }} onClick={submitCode}>
-                            Submit
-                        </Button>
-                    </>
+                    <CodeEditor callback={callback} exerciseId={parseInt(exerciseId)} />
                 ) : (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 )}
