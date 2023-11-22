@@ -18,13 +18,39 @@ import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
+import FormExercise from '../components/FormExercise';
 
-type ExerciseT = {
+export type RadioSpec = {
+    type: 'radio';
+    key: string;
+    title: string;
+    required: boolean;
+    description: string;
+    titleMap: { [key: string]: string };
+    enum: string[];
+};
+export type DropdownSpec = Omit<RadioSpec, 'type'> & { type: 'dropdown' };
+export type CheckboxSpec = Omit<RadioSpec, 'type'> & { type: 'checkbox' };
+
+export type TextSpec = { type: 'text'; key: string; title: string; required: boolean; description: string };
+export type NumberSpec = Omit<TextSpec, 'type'> & { type: 'number' };
+export type TextAreaSpec = Omit<TextSpec, 'type'> & { type: 'textarea' };
+export type FormSpec = RadioSpec | DropdownSpec | CheckboxSpec | TextSpec | NumberSpec | TextAreaSpec;
+
+export type FileSpec = { type: 'file'; key: string };
+export type StaticSpec = { type: 'static'; description: string };
+export type GeneralSpec = FileSpec | StaticSpec | FormSpec;
+
+export type ExerciseT = {
+    id: number;
     display_name: string;
     is_submittable: boolean;
     max_points: number;
     max_submissions: number;
-    exercise_info: { form_spec: { title: string }[] };
+    exercise_info: { form_spec: GeneralSpec[]; form_i18n: { [key: string]: { en: string; fi: string } } } | null;
+};
+export type ExerciseWithInfo = ExerciseT & {
+    exercise_info: { form_spec: GeneralSpec[]; form_i18n: { [key: string]: { en: string; fi: string } } };
 };
 
 type Submissions = {
@@ -111,6 +137,7 @@ const Exercise = (): JSX.Element => {
     if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
+    if (exercise.exercise_info === null) return <Typography>Exercise submission type info unavailable</Typography>;
     return (
         <>
             <Typography variant="h3">{exercise.display_name}</Typography>
@@ -126,7 +153,7 @@ const Exercise = (): JSX.Element => {
                     sx={{ mt: 0.5, mb: 2 }}
                     label={`${submissions.points} / ${exercise.max_points}`}
                     color={
-                        submissions.points === 0
+                        submissions.points === 0 && exercise.max_points > 0
                             ? 'error'
                             : submissions.points < exercise.max_points
                               ? 'warning'
@@ -148,7 +175,15 @@ const Exercise = (): JSX.Element => {
 
             <CustomTabPanel value={activeIndex} index={0}>
                 {numSubmissions < exercise.max_submissions ? (
-                    <CodeEditor callback={callback} exerciseId={parseInt(exerciseId)} />
+                    exercise.exercise_info.form_spec[0].type === 'file' ? (
+                        <CodeEditor
+                            callback={callback}
+                            exerciseId={parseInt(exerciseId)}
+                            formKey={exercise.exercise_info.form_spec[0].key}
+                        />
+                    ) : (
+                        <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
+                    )
                 ) : (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 )}
@@ -182,7 +217,7 @@ const Exercise = (): JSX.Element => {
                                             <Chip
                                                 label={`${submission.grade} / ${exercise.max_points}`}
                                                 color={
-                                                    submission.grade === 0
+                                                    submission.grade === 0 && exercise.max_points > 0
                                                         ? 'error'
                                                         : submission.grade < exercise.max_points
                                                           ? 'warning'

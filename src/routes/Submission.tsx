@@ -41,7 +41,7 @@ const Submission = (): JSX.Element => {
                 sx={{ mt: 0.5, mb: 3 }}
                 label={`${submission.grade} / ${submission.exercise.max_points}`}
                 color={
-                    submission.grade === 0
+                    submission.grade === 0 && submission.exercise.max_points > 0
                         ? 'error'
                         : submission.grade < submission.exercise.max_points
                           ? 'warning'
@@ -67,7 +67,7 @@ const Submission = (): JSX.Element => {
             </Container>
             <Button
                 variant="contained"
-                sx={{ mt: 1 }}
+                sx={{ mt: 1, mb: 10 }} // TODO: find a better way to add space to bottom of page if content too long
                 onClick={() => navigate(`/exercise/${submission.exercise.id}`, { state: { showSubmissions: true } })}
             >
                 Go back

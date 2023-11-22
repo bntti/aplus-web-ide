@@ -11,7 +11,12 @@ import { scala } from '@codemirror/legacy-modes/mode/clike';
 import { Navigate } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 
-const CodeEditor = ({ callback, exerciseId }: { callback: () => void; exerciseId: number }): JSX.Element => {
+type Props = {
+    callback: () => void;
+    exerciseId: number;
+    formKey: string;
+};
+const CodeEditor = ({ callback, exerciseId, formKey }: Props): JSX.Element => {
     const { apiToken } = useContext(ApiTokenContext);
     const theme = useTheme();
 
@@ -20,7 +25,7 @@ const CodeEditor = ({ callback, exerciseId }: { callback: () => void; exerciseId
 
     const submitCode = (): void => {
         const formData = new FormData();
-        formData.append('file1', new Blob([code]));
+        formData.append(formKey, new Blob([code]));
         axios
             .post(`/api/v2/exercises/${exerciseId}/submissions/submit`, formData, {
                 headers: { Authorization: `Token ${apiToken}` },
