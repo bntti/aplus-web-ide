@@ -1,51 +1,32 @@
-import { Paper, Table, TableBody, TableCell, TableContainer, TableRow, Typography } from '@mui/material';
-import axios from 'axios';
-import { useContext, useEffect, useState } from 'react';
+import { Card, CardActionArea, CardContent, Grid, Typography } from '@mui/material';
+import { useContext } from 'react';
 import { Link } from 'react-router-dom';
 import { ApiTokenContext, UserContext } from '../app/StateProvider';
-
-type CoursesT = {
-    count: number;
-    results: { id: number; name: string }[];
-};
 
 const Courses = (): JSX.Element => {
     const { apiToken } = useContext(ApiTokenContext);
     const { user } = useContext(UserContext);
 
-    const [courses, setCourses] = useState<CoursesT | null>(null);
-
-    useEffect(() => {
-        if (apiToken === null) return;
-        axios
-            .get('/api/v2/courses', { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
-                setCourses(response.data);
-            })
-            .catch(console.error);
-    }, [apiToken]);
-
     if (apiToken === null) return <></>;
-    if (user === null || courses === null) return <Typography>Loading courses...</Typography>;
+    if (user === null) return <Typography>Loading courses...</Typography>;
     return (
-        <TableContainer component={Paper}>
-            <Table component="div">
-                <TableBody component="div">
-                    {user.enrolled_courses.map((course) => (
-                        <TableRow
-                            key={course.id}
-                            component={Link}
-                            to={`/course/${course.id}`}
-                            style={{ textDecoration: 'none' }}
-                        >
-                            <TableCell component="div">
-                                <Typography>{course.name}</Typography>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </TableContainer>
+        <Grid container spacing={10}>
+            {user.enrolled_courses.map((course) => (
+                <Grid xs={4} item key={course.id} style={{ textDecoration: 'none' }}>
+                    <Card>
+                        <CardActionArea component={Link} to={`/course/${course.id}`} sx={{ height: 200 }}>
+                            <CardContent>
+                                <Typography variant="h5">{course.name}</Typography>
+                                <Typography sx={{ mt: 1.5 }}>{course.instance_name}</Typography>
+                                <Typography sx={{}} variant="body2" color="text.secondary">
+                                    {course.code}
+                                </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                    </Card>
+                </Grid>
+            ))}
+        </Grid>
     );
 };
 

@@ -7,7 +7,10 @@ type ApiTokenContextT = {
 };
 export const ApiTokenContext = React.createContext<ApiTokenContextT>({} as ApiTokenContextT);
 
-type User = { full_name: string; enrolled_courses: { id: number; name: string }[] } | null;
+type User = {
+    full_name: string;
+    enrolled_courses: { id: number; name: string; instance_name: string; code: string }[];
+} | null;
 type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
 export const UserContext = React.createContext<UserContextT>({} as UserContextT);
 
