@@ -1,4 +1,4 @@
-import { Button, Chip, Container, Paper, Typography, useTheme } from '@mui/material';
+import { Button, Chip, Container, Paper, Stack, Typography, useTheme } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
@@ -35,20 +35,31 @@ const Submission = (): JSX.Element => {
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
-            <Typography variant="h3">{submission.exercise.display_name}</Typography>
-            <Typography variant="h6">Submission {new Date(submission.submission_time).toLocaleString()}</Typography>
-            <Chip
-                sx={{ mt: 0.5, mb: 3 }}
-                label={`${submission.grade} / ${submission.exercise.max_points}`}
-                color={
-                    submission.grade === 0 && submission.exercise.max_points > 0
-                        ? 'error'
-                        : submission.grade < submission.exercise.max_points
-                          ? 'warning'
-                          : 'success'
-                }
-                variant={currentTheme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-            />
+            <Typography variant="h4">{submission.exercise.display_name}</Typography>
+            <Typography>Submission {new Date(submission.submission_time).toLocaleString()}</Typography>
+            <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }} alignItems="center">
+                <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() =>
+                        navigate(`/exercise/${submission.exercise.id}`, { state: { showSubmissions: true } })
+                    }
+                >
+                    Go back
+                </Button>
+                <Chip
+                    label={`${submission.grade} / ${submission.exercise.max_points}`}
+                    color={
+                        submission.grade === 0 && submission.exercise.max_points > 0
+                            ? 'error'
+                            : submission.grade < submission.exercise.max_points
+                              ? 'warning'
+                              : 'success'
+                    }
+                    variant={currentTheme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+                />
+            </Stack>
+
             <Typography variant="h6">Feedback:</Typography>
             <Container
                 component={Paper}
@@ -65,13 +76,6 @@ const Submission = (): JSX.Element => {
             >
                 <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '').trim()}</pre>
             </Container>
-            <Button
-                variant="contained"
-                sx={{ mt: 1, mb: 10 }} // TODO: find a better way to add space to bottom of page if content too long
-                onClick={() => navigate(`/exercise/${submission.exercise.id}`, { state: { showSubmissions: true } })}
-            >
-                Go back
-            </Button>
         </>
     );
 };

@@ -1,7 +1,9 @@
 import {
     Box,
+    Button,
     Chip,
     Paper,
+    Stack,
     Tab,
     Table,
     TableBody,
@@ -15,7 +17,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
@@ -47,6 +49,7 @@ export type ExerciseT = {
     is_submittable: boolean;
     max_points: number;
     max_submissions: number;
+    course: { id: number };
     exercise_info: { form_spec: GeneralSpec[]; form_i18n: { [key: string]: { en: string; fi: string } } } | null;
 };
 export type ExerciseWithInfo = ExerciseT & {
@@ -91,6 +94,7 @@ const Exercise = (): JSX.Element => {
     const { state } = useLocation();
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const navigate = useNavigate();
     const theme = useTheme();
 
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
@@ -140,7 +144,7 @@ const Exercise = (): JSX.Element => {
     if (exercise.exercise_info === null) return <Typography>Exercise submission type info unavailable</Typography>;
     return (
         <>
-            <Typography variant="h3">{exercise.display_name}</Typography>
+            <Typography variant="h4">{exercise.display_name}</Typography>
             {numSubmissions > 0 ? (
                 <Typography>
                     Submissions done {numSubmissions}/{exercise.max_submissions}
@@ -148,26 +152,27 @@ const Exercise = (): JSX.Element => {
             ) : (
                 <Typography>Max submissions {exercise.max_submissions}</Typography>
             )}
-            {numSubmissions > 0 && (
-                <Chip
-                    sx={{ mt: 0.5, mb: 2 }}
-                    label={`${submissions.points} / ${exercise.max_points}`}
-                    color={
-                        submissions.points === 0 && exercise.max_points > 0
-                            ? 'error'
-                            : submissions.points < exercise.max_points
-                              ? 'warning'
-                              : 'success'
-                    }
-                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                />
-            )}
+            <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
+                <Button variant="outlined" size="small" onClick={() => navigate(`/course/${exercise.course.id}`)}>
+                    Back to course
+                </Button>
+                {numSubmissions > 0 && (
+                    <Chip
+                        sx={{ mt: 0.5 }}
+                        label={`${submissions.points} / ${exercise.max_points}`}
+                        color={
+                            submissions.points === 0 && exercise.max_points > 0
+                                ? 'error'
+                                : submissions.points < exercise.max_points
+                                  ? 'warning'
+                                  : 'success'
+                        }
+                        variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+                    />
+                )}
+            </Stack>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs
-                    aria-label="basic tabs example"
-                    value={activeIndex}
-                    onChange={(_, value) => setActiveIndex(value)}
-                >
+                <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
                     <Tab label="Edit code" {...a11yProps(0)} />
                     <Tab label="Submissions" {...a11yProps(1)} />
                 </Tabs>

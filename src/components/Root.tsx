@@ -48,7 +48,7 @@ const Root = (): JSX.Element => {
         <ThemeContext.Provider value={{ colorMode }}>
             <ThemeProvider theme={theme}>
                 <CssBaseline enableColorScheme />
-                <Container>
+                <Container sx={{ paddingBottom: '50px' }}>
                     <ToolBar />
                     {apiToken === null && (
                         <>
