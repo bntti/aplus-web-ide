@@ -39,12 +39,18 @@ const Course = (): JSX.Element => {
             });
     }, [apiToken, courseId]);
 
+    const parseName = (name: string): string => {
+        const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
+        const matches = name.match(regexp);
+        return matches ? matches[1] + matches[2] : name;
+    };
+
     if (apiToken === null) return <Navigate replace to="/courses" />;
     if (!hasAccess) return <Typography>You don't have access to this course</Typography>;
     if (course === null || exercises === null) return <Typography>Loading course...</Typography>;
     return (
         <>
-            <Typography variant="h2">{course.name}</Typography>
+            <Typography variant="h2">{parseName(course.name)}</Typography>
 
             {exercises.results
                 .filter((exercise) => exercise.exercises.length > 0)
@@ -64,7 +70,7 @@ const Course = (): JSX.Element => {
                                             style={{ textDecoration: 'none' }}
                                         >
                                             <TableCell component="div">
-                                                <Typography>{exercise2.display_name}</Typography>
+                                                <Typography>{parseName(exercise2.display_name)}</Typography>
                                             </TableCell>
                                         </TableRow>
                                     ))}

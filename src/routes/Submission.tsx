@@ -31,11 +31,17 @@ const Submission = (): JSX.Element => {
             .catch(console.error);
     }, [apiToken, submissionId]);
 
+    const parseName = (name: string): string => {
+        const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
+        const matches = name.match(regexp);
+        return matches ? matches[1] + matches[2] : name;
+    };
+
     if (apiToken === null) return <Navigate replace to="/courses" />;
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
-            <Typography variant="h4">{submission.exercise.display_name}</Typography>
+            <Typography variant="h4">{parseName(submission.exercise.display_name)}</Typography>
             <Typography>Submission {new Date(submission.submission_time).toLocaleString()}</Typography>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }} alignItems="center">
                 <Button

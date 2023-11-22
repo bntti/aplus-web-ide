@@ -136,6 +136,12 @@ const Exercise = (): JSX.Element => {
         setActiveIndex(1);
     };
 
+    const parseName = (name: string): string => {
+        const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
+        const matches = name.match(regexp);
+        return matches ? matches[1] + matches[2] : name;
+    };
+
     const numSubmissions = submissions ? submissions.submissions_with_points.length : 0;
 
     if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
@@ -144,7 +150,7 @@ const Exercise = (): JSX.Element => {
     if (exercise.exercise_info === null) return <Typography>Exercise submission type info unavailable</Typography>;
     return (
         <>
-            <Typography variant="h4">{exercise.display_name}</Typography>
+            <Typography variant="h4">{parseName(exercise.display_name)}</Typography>
             {numSubmissions > 0 ? (
                 <Typography>
                     Submissions done {numSubmissions}/{exercise.max_submissions}
