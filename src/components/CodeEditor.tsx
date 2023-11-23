@@ -1,38 +1,63 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
-import { Button, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Stack, useTheme } from '@mui/material';
+import { StreamLanguage } from '@codemirror/language';
+import { scala } from '@codemirror/legacy-modes/mode/clike';
+import {
+    Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    SelectChangeEvent,
+    Stack,
+    Typography,
+    useTheme,
+} from '@mui/material';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useContext, useState } from 'react';
-import { StreamLanguage } from '@codemirror/language';
-import { scala } from '@codemirror/legacy-modes/mode/clike';
 
 import { Navigate } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
+import { ExerciseWithInfo } from '../routes/exerciseTypes';
 
 type Props = {
     callback: () => void;
-    exerciseId: number;
+    exercise: ExerciseWithInfo;
     formKey: string;
 };
-const CodeEditor = ({ callback, exerciseId, formKey }: Props): JSX.Element => {
+
+const getLanguageFromFilename = (filename: string): string => {
+    if (filename.endsWith('.js')) return 'javascript';
+    else if (filename.endsWith('.py')) return 'python';
+    else if (filename.endsWith('.scala')) return 'scala';
+    return 'text';
+};
+
+const CodeEditor = ({ callback, exercise, formKey }: Props): JSX.Element => {
+    if (exercise.exercise_info.form_spec[0].type !== 'file') {
+        throw new Error("Exercise that wasn't a file was passed to CodeEditor");
+    }
+
     const { apiToken } = useContext(ApiTokenContext);
     const theme = useTheme();
 
+    const filename = exercise.exercise_info.form_spec[0].title;
     const [code, setCode] = useState<string>('');
-    const [language, setLanguage] = useState<string>('');
+    const [language, setLanguage] = useState<string>(getLanguageFromFilename(filename));
 
     const submitCode = (): void => {
         const formData = new FormData();
         formData.append(formKey, new Blob([code]));
         axios
-            .post(`/api/v2/exercises/${exerciseId}/submissions/submit`, formData, {
+            .post(`/api/v2/exercises/${exercise.id}/submissions/submit`, formData, {
                 headers: { Authorization: `Token ${apiToken}` },
             })
             .then(callback)
             .catch(console.error);
     };
+
     // eslint-disable-next-line
     const getLanguage = (): any[] => {
         if (language === 'javascript') return [javascript()];
@@ -63,6 +88,7 @@ const CodeEditor = ({ callback, exerciseId, formKey }: Props): JSX.Element => {
     if (apiToken === null) return <Navigate replace to="/courses" />;
     return (
         <>
+            <Typography sx={{ mb: 0.25 }}>{exercise.exercise_info.form_spec[0].title}</Typography>
             <ReactCodeMirror
                 value={code}
                 height="55vh"
@@ -85,7 +111,7 @@ const CodeEditor = ({ callback, exerciseId, formKey }: Props): JSX.Element => {
                         label="Language"
                         onChange={(event: SelectChangeEvent) => setLanguage(event.target.value)}
                     >
-                        <MenuItem value="">-</MenuItem>
+                        <MenuItem value="text">Text</MenuItem>
                         <MenuItem value="python">Python</MenuItem>
                         <MenuItem value="javascript">JavaScript</MenuItem>
                         <MenuItem value="scala">Scala</MenuItem>

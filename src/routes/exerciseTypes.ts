@@ -5,7 +5,7 @@ const RadioSchema = z.object({
     key: z.string(),
     title: z.string(),
     required: z.boolean(),
-    description: z.string(),
+    description: z.string().optional(),
     titleMap: z.record(z.string(), z.string()),
     enum: z.array(z.string()),
 });
@@ -16,10 +16,10 @@ const TextSchema = z.object({
     key: z.string(),
     title: z.string(),
     required: z.boolean(),
-    description: z.string(),
+    description: z.string().optional(),
 });
-const FileSchema = z.object({ type: z.literal('file'), key: z.string() });
-const StaticSchema = z.object({ type: z.literal('static'), description: z.string() });
+const FileSchema = z.object({ type: z.literal('file'), key: z.string(), title: z.string() });
+const StaticSchema = z.object({ type: z.literal('static'), description: z.string().optional() });
 const GeneralSchema = z.union([RadioSchema, DropdownSchema, CheckboxSchema, TextSchema, FileSchema, StaticSchema]);
 
 export const ExerciseSchema = z.object({

@@ -50,7 +50,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                <Typography>{translate(portion.description)}</Typography>
+                {portion.description && <Typography>{translate(portion.description)}</Typography>}
                 <RadioGroup
                     id={portion.key}
                     aria-labelledby={portion.key}
@@ -78,7 +78,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                <Typography>{translate(portion.description)}</Typography>
+                {portion.description && <Typography>{translate(portion.description)}</Typography>}
                 <TextField
                     id={portion.key}
                     aria-labelledby={portion.key}
@@ -103,7 +103,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                <Typography>{translate(portion.description)}</Typography>
+                {portion.description && <Typography>{translate(portion.description)}</Typography>}
                 <Select
                     id={portion.key}
                     labelId={portion.key}
@@ -131,7 +131,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                <Typography>{translate(portion.description)}</Typography>
+                {portion.description && <Typography>{translate(portion.description)}</Typography>}
                 <FormGroup id={portion.key} aria-labelledby={portion.key}>
                     {localValue.map(({ key, value, checked }) => (
                         <FormControlLabel
@@ -202,20 +202,18 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
     };
 
     return (
-        <>
-            <Container component={Paper} sx={{ pt: 1, pb: 1 }}>
-                <form onSubmit={handleSubmit}>
-                    {exercise.exercise_info.form_spec
-                        .filter((portion): portion is FormSpec => portion.type !== 'static' && portion.type !== 'file')
-                        .map((portion) => (
-                            <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
-                                <Portion portion={portion} />
-                            </FormControl>
-                        ))}
-                    <Button type="submit">Submit</Button>
-                </form>
-            </Container>
-        </>
+        <Container component={Paper} sx={{ pt: 1, pb: 1 }}>
+            <form onSubmit={handleSubmit}>
+                {exercise.exercise_info.form_spec
+                    .filter((portion): portion is FormSpec => portion.type !== 'static' && portion.type !== 'file')
+                    .map((portion) => (
+                        <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
+                            <Portion portion={portion} />
+                        </FormControl>
+                    ))}
+                <Button type="submit">Submit</Button>
+            </form>
+        </Container>
     );
 };
 export default FormExercise;

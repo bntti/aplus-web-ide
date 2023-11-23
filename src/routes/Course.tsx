@@ -126,7 +126,7 @@ const Course = (): JSX.Element => {
             {coursePoints.modules
                 .filter((module) => module.exercises.length > 0)
                 .map((module) => (
-                    <Container key={module.name} component={Paper} sx={{ mb: 5, pt: 3, pb: 3 }}>
+                    <Container key={module.name} component={Paper} sx={{ mb: 5, pt: 3, pb: 2.5 }}>
                         <Typography variant="h5" sx={{ mb: 1 }}>
                             {parseName(module.name)}
                         </Typography>
@@ -134,7 +134,7 @@ const Course = (): JSX.Element => {
                             direction="row"
                             spacing={2}
                             alignItems="center"
-                            sx={{ mb: 1 }}
+                            sx={{ mb: 2 }}
                             divider={<Divider orientation="vertical" flexItem />}
                         >
                             <Stack direction="row" spacing={1}>
@@ -157,7 +157,7 @@ const Course = (): JSX.Element => {
                             </Stack>
                         </Stack>
                         <TableContainer>
-                            <Table component="div">
+                            <Table component="div" size="small">
                                 <TableHead component="div">
                                     <TableRow component="div">
                                         <TableCell component="div">
@@ -177,7 +177,12 @@ const Course = (): JSX.Element => {
                                             key={exercise.id}
                                             component={Link}
                                             to={`/exercise/${exercise.id}`}
-                                            style={{ textDecoration: 'none' }}
+                                            sx={{
+                                                textDecoration: 'none',
+                                                '&:last-child div.MuiTableCell-root': {
+                                                    borderBottom: 0,
+                                                },
+                                            }}
                                         >
                                             <TableCell component="div" sx={{ width: '70%' }}>
                                                 <Typography>{parseName(exercise.name)}</Typography>

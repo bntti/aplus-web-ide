@@ -54,7 +54,7 @@ const CustomTabPanel = (props: TabPanelProps): JSX.Element => {
             aria-labelledby={`simple-tab-${index}`}
             {...other}
         >
-            {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+            {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
         </div>
     );
 };
@@ -123,7 +123,7 @@ const Exercise = (): JSX.Element => {
     if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
-    if (exercise.exercise_info === null) return <Typography>Exercise submission type info unavailable</Typography>;
+
     return (
         <>
             <Typography variant="h4">{parseName(exercise.display_name)}</Typography>
@@ -161,18 +161,18 @@ const Exercise = (): JSX.Element => {
             </Box>
 
             <CustomTabPanel value={activeIndex} index={0}>
-                {numSubmissions < exercise.max_submissions ? (
-                    exercise.exercise_info.form_spec[0].type === 'file' ? (
-                        <CodeEditor
-                            callback={callback}
-                            exerciseId={parseInt(exerciseId)}
-                            formKey={exercise.exercise_info.form_spec[0].key}
-                        />
-                    ) : (
-                        <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
-                    )
-                ) : (
+                {exercise.exercise_info === null ? (
+                    <Typography>Exercise submission type info unavailable</Typography>
+                ) : numSubmissions >= exercise.max_submissions ? (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
+                ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
+                    <CodeEditor
+                        callback={callback}
+                        exercise={exercise as ExerciseWithInfo}
+                        formKey={exercise.exercise_info.form_spec[0].key}
+                    />
+                ) : (
+                    <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
                 )}
             </CustomTabPanel>
 
@@ -180,7 +180,7 @@ const Exercise = (): JSX.Element => {
                 {submissions.submissions_with_points.length === 0 ? (
                     <Typography>No submissions</Typography>
                 ) : (
-                    <TableContainer component={Paper}>
+                    <TableContainer component={Paper} sx={{ mt: 1 }}>
                         <Table component="div">
                             <TableHead component="div">
                                 <TableCell component="div">Submission #</TableCell>
