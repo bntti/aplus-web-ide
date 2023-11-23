@@ -1,6 +1,6 @@
 # A+ Web IDE
 
-A react frontend and IDE for the A+ service.
+A react frontend and IDE for A+.
 
 ## Running project
 
