@@ -1,4 +1,13 @@
-import { Button, Container, CssBaseline, TextField, ThemeProvider, Typography, createTheme } from '@mui/material';
+import {
+    Button,
+    Container,
+    CssBaseline,
+    Paper,
+    TextField,
+    ThemeProvider,
+    Typography,
+    createTheme,
+} from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
@@ -44,31 +53,32 @@ const Root = (): JSX.Element => {
         [mode],
     );
 
+    const Login = (): JSX.Element => (
+        <Container component={Paper} sx={{ pt: 2.5, pb: 3 }}>
+            <Typography variant="h5" sx={{ mb: 2 }}>
+                Login
+            </Typography>
+            <form onSubmit={addApiToken}>
+                <TextField
+                    fullWidth
+                    label="Api token"
+                    value={newApiToken}
+                    onChange={(event) => setNewApiToken(event.target.value)}
+                />
+                <Button variant="contained" type="submit" sx={{ mt: 1 }}>
+                    Log in
+                </Button>
+            </form>
+        </Container>
+    );
+
     return (
         <ThemeContext.Provider value={{ colorMode }}>
             <ThemeProvider theme={theme}>
                 <CssBaseline enableColorScheme />
                 <Container sx={{ paddingBottom: '50px' }}>
                     <ToolBar />
-                    {apiToken === null && (
-                        <>
-                            <Typography variant="h5" sx={{ mb: 2 }}>
-                                Login
-                            </Typography>
-                            <form onSubmit={addApiToken}>
-                                <TextField
-                                    label="Api token"
-                                    value={newApiToken}
-                                    onChange={(event) => setNewApiToken(event.target.value)}
-                                />
-                                <br />
-                                <Button variant="contained" type="submit" sx={{ mt: 0.5 }}>
-                                    Log in
-                                </Button>
-                            </form>
-                        </>
-                    )}
-                    <Outlet />
+                    {apiToken === null ? <Login /> : <Outlet />}
                 </Container>
             </ThemeProvider>
         </ThemeContext.Provider>
