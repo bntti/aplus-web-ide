@@ -2,16 +2,22 @@ import { Button, Chip, Container, Paper, Stack, Typography, useTheme } from '@mu
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { z } from 'zod';
 import { ApiTokenContext } from '../app/StateProvider';
 
-type SubmissionT = {
-    id: number;
-    submission_time: string;
-    grade: number;
-    exercise: { id: number; display_name: string; max_points: number };
-    status: string;
-    feedback: string;
-};
+const SubmissionSchema = z.object({
+    id: z.number().int().nonnegative(),
+    submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
+    grade: z.number().int().nonnegative(),
+    exercise: z.object({
+        id: z.number().int().nonnegative(),
+        display_name: z.string(),
+        max_points: z.number().int().nonnegative(),
+    }),
+    status: z.string(),
+    feedback: z.string(),
+});
+type SubmissionT = z.infer<typeof SubmissionSchema>;
 
 const Submission = (): JSX.Element => {
     const currentTheme = useTheme();
@@ -26,7 +32,7 @@ const Submission = (): JSX.Element => {
         axios
             .get(`/api/v2/submissions/${submissionId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                setSubmission(response.data);
+                setSubmission(SubmissionSchema.parse(response.data));
             })
             .catch(console.error);
     }, [apiToken, submissionId]);
@@ -42,7 +48,7 @@ const Submission = (): JSX.Element => {
     return (
         <>
             <Typography variant="h4">{parseName(submission.exercise.display_name)}</Typography>
-            <Typography>Submission {new Date(submission.submission_time).toLocaleString()}</Typography>
+            <Typography>Submission {submission.submission_time.toLocaleString()}</Typography>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }} alignItems="center">
                 <Button
                     variant="outlined"

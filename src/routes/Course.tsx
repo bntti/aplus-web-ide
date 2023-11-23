@@ -1,6 +1,7 @@
 import {
     Chip,
     Container,
+    Divider,
     Paper,
     Stack,
     Table,
@@ -12,11 +13,11 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { ApiTokenContext } from '../app/StateProvider';
 import { z } from 'zod';
+import { ApiTokenContext } from '../app/StateProvider';
 
 const CourseSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -69,37 +70,34 @@ const Course = (): JSX.Element => {
     const [course, setCourse] = useState<CourseT | null>(null);
     const [coursePoints, setCoursePoints] = useState<CoursePoints | null>(null);
     const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
-    const [hasAccess, setHasAccess] = useState<boolean>(true);
 
     useEffect(() => {
         if (apiToken === null) return;
-        axios
-            .get(`/api/v2/courses/${courseId}`, { headers: { Authorization: `Token ${apiToken}` } })
-            .then(async (response) => {
-                setHasAccess(true);
-                setCourse(CourseSchema.parse(response.data));
-
-                const exerciseResponse = await axios.get(`/api/v2/courses/${courseId}/exercises`, {
-                    headers: { Authorization: `Token ${apiToken}` },
-                });
-                const exercises = ExercisesSchema.parse(exerciseResponse.data);
-                const maxSubmissions: { [key: number]: number } = {};
-                for (const result of exercises.results) {
-                    for (const exercise of result.exercises) {
-                        maxSubmissions[exercise.id] = exercise.max_submissions;
-                    }
-                }
-                setExerciseMaxSubmissions(maxSubmissions);
-
-                const pointsResponse = await axios.get(`/api/v2/courses/${courseId}/points/me`, {
-                    headers: { Authorization: `Token ${apiToken}` },
-                });
-                setCoursePoints(CoursePointsSchema.parse(pointsResponse.data));
-            })
-            .catch((error: AxiosError) => {
-                if (error.response && error.response.request.status === 403) setHasAccess(false);
-                else console.error(error);
+        const getData = async (): Promise<void> => {
+            const courseResponse = await axios.get(`/api/v2/courses/${courseId}`, {
+                headers: { Authorization: `Token ${apiToken}` },
             });
+
+            setCourse(CourseSchema.parse(courseResponse.data));
+
+            const exerciseResponse = await axios.get(`/api/v2/courses/${courseId}/exercises`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            });
+            const exercises = ExercisesSchema.parse(exerciseResponse.data);
+            const maxSubmissions: { [key: number]: number } = {};
+            for (const result of exercises.results) {
+                for (const exercise of result.exercises) {
+                    maxSubmissions[exercise.id] = exercise.max_submissions;
+                }
+            }
+            setExerciseMaxSubmissions(maxSubmissions);
+
+            const pointsResponse = await axios.get(`/api/v2/courses/${courseId}/points/me`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            });
+            setCoursePoints(CoursePointsSchema.parse(pointsResponse.data));
+        };
+        getData().catch(console.error);
     }, [apiToken, courseId]);
 
     const parseName = (name: string): string => {
@@ -109,7 +107,6 @@ const Course = (): JSX.Element => {
     };
 
     if (apiToken === null) return <Navigate replace to="/courses" />;
-    if (!hasAccess) return <Typography>You don't have access to this course</Typography>;
     if (course === null || coursePoints === null || exerciseMaxSubmissions === null) {
         return <Typography>Loading course...</Typography>;
     }
@@ -118,13 +115,13 @@ const Course = (): JSX.Element => {
     return (
         <>
             <Typography variant="h2">{parseName(course.name)}</Typography>
-            <Typography variant="h6" sx={{ mb: 5 }}>
-                Total points{' '}
+            <Stack direction="row" spacing={1} sx={{ mb: 3.5 }}>
+                <Typography variant="h6">Total points</Typography>
                 <Chip
                     label={`${coursePoints.points} / ${totalMaxPoints}`}
                     variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                 />
-            </Typography>
+            </Stack>
 
             {coursePoints.modules
                 .filter((module) => module.exercises.length > 0)
@@ -133,25 +130,31 @@ const Course = (): JSX.Element => {
                         <Typography variant="h5" sx={{ mb: 1 }}>
                             {parseName(module.name)}
                         </Typography>
-                        <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 1 }}>
-                            <Typography>
-                                Points required to pass{' '}
+                        <Stack
+                            direction="row"
+                            spacing={2}
+                            alignItems="center"
+                            sx={{ mb: 1 }}
+                            divider={<Divider orientation="vertical" flexItem />}
+                        >
+                            <Stack direction="row" spacing={1}>
+                                <Typography>Points required to pass</Typography>
                                 <Chip
                                     size="small"
                                     label={`${module.points} / ${module.points_to_pass}`}
                                     color={module.passed ? 'success' : 'error'}
                                     variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                                 />
-                            </Typography>
-                            <Typography>
-                                Points{' '}
+                            </Stack>
+                            <Stack direction="row" spacing={1}>
+                                <Typography>Points</Typography>
                                 <Chip
                                     size="small"
                                     label={`${module.points} / ${module.max_points}`}
                                     color={module.points < module.max_points ? 'warning' : 'success'}
                                     variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                                 />
-                            </Typography>
+                            </Stack>
                         </Stack>
                         <TableContainer>
                             <Table component="div">

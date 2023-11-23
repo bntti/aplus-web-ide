@@ -18,48 +18,24 @@ import {
 import axios from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { z } from 'zod';
 import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
+import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 
-export type RadioSpec = {
-    type: 'radio';
-    key: string;
-    title: string;
-    required: boolean;
-    description: string;
-    titleMap: { [key: string]: string };
-    enum: string[];
-};
-export type DropdownSpec = Omit<RadioSpec, 'type'> & { type: 'dropdown' };
-export type CheckboxSpec = Omit<RadioSpec, 'type'> & { type: 'checkbox' };
+const SubmissionsSchema = z.object({
+    submissions_with_points: z.array(
+        z.object({
+            id: z.number().int().nonnegative(),
+            submission_time: z.string().datetime({ precision: 6 }).pipe(z.coerce.date()),
+            grade: z.number().int().nonnegative(),
+        }),
+    ),
+    points: z.number().int().nonnegative(),
+});
 
-export type TextSpec = { type: 'text'; key: string; title: string; required: boolean; description: string };
-export type NumberSpec = Omit<TextSpec, 'type'> & { type: 'number' };
-export type TextAreaSpec = Omit<TextSpec, 'type'> & { type: 'textarea' };
-export type FormSpec = RadioSpec | DropdownSpec | CheckboxSpec | TextSpec | NumberSpec | TextAreaSpec;
-
-export type FileSpec = { type: 'file'; key: string };
-export type StaticSpec = { type: 'static'; description: string };
-export type GeneralSpec = FileSpec | StaticSpec | FormSpec;
-
-export type ExerciseT = {
-    id: number;
-    display_name: string;
-    is_submittable: boolean;
-    max_points: number;
-    max_submissions: number;
-    course: { id: number };
-    exercise_info: { form_spec: GeneralSpec[]; form_i18n: { [key: string]: { en: string; fi: string } } } | null;
-};
-export type ExerciseWithInfo = ExerciseT & {
-    exercise_info: { form_spec: GeneralSpec[]; form_i18n: { [key: string]: { en: string; fi: string } } };
-};
-
-type Submissions = {
-    submissions_with_points: { id: number; submission_time: string; grade: number }[];
-    points: number;
-};
+type Submissions = z.infer<typeof SubmissionsSchema>;
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -107,7 +83,7 @@ const Exercise = (): JSX.Element => {
                 headers: { Authorization: `Token ${apiToken}` },
             })
             .then((response) => {
-                setSubmissions(response.data);
+                setSubmissions(SubmissionsSchema.parse(response.data));
             })
             .catch(console.error);
     }, [apiToken, exerciseId]);
@@ -118,7 +94,7 @@ const Exercise = (): JSX.Element => {
             .get(`/api/v2/exercises/${exerciseId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
                 const exerciseData: ExerciseT = response.data;
-                setExercise(exerciseData);
+                setExercise(ExerciseSchema.parse(exerciseData));
             })
             .catch(console.error);
         getSubmissions();
@@ -238,9 +214,7 @@ const Exercise = (): JSX.Element => {
                                             />
                                         </TableCell>
                                         <TableCell component="div" align="right">
-                                            <Typography>
-                                                {new Date(submission.submission_time).toLocaleString()}
-                                            </Typography>
+                                            <Typography>{submission.submission_time.toLocaleString()}</Typography>
                                         </TableCell>
                                     </TableRow>
                                 ))}

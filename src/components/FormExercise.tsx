@@ -16,16 +16,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useState } from 'react';
-import {
-    CheckboxSpec,
-    DropdownSpec,
-    ExerciseWithInfo,
-    FormSpec,
-    NumberSpec,
-    RadioSpec,
-    TextAreaSpec,
-    TextSpec,
-} from '../routes/Exercise';
+import { CheckboxSpec, DropdownSpec, ExerciseWithInfo, FormSpec, RadioSpec, TextSpec } from '../routes/exerciseTypes';
 
 type Props = { exercise: ExerciseWithInfo; apiToken: string; callback: () => void };
 type FormCheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
@@ -82,7 +73,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
             </>
         );
     };
-    const TextPortion = ({ portion }: { portion: TextSpec | TextAreaSpec | NumberSpec }): JSX.Element => {
+    const TextPortion = ({ portion }: { portion: TextSpec }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string>(formValues[portion.key] ?? '');
         return (
             <>
@@ -186,9 +177,6 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
                 return <DropdownPortion portion={portion} />;
             case 'checkbox':
                 return <CheckboxPortion portion={portion} />;
-            default:
-                // @ts-expect-error In case there are more types
-                throw new Error(`Unhandled form type ${portion.type}`);
         }
     };
 

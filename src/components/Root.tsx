@@ -11,7 +11,7 @@ import {
 import axios from 'axios';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import { ApiTokenContext, ThemeContext, UserContext } from '../app/StateProvider';
+import { ApiTokenContext, ThemeContext, UserContext, UserSchema } from '../app/StateProvider';
 import ToolBar from '../components/ToolBar';
 
 const Root = (): JSX.Element => {
@@ -28,7 +28,7 @@ const Root = (): JSX.Element => {
         axios
             .get('/api/v2/users/me', { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                setUser(response.data);
+                setUser(UserSchema.parse(response.data));
             })
             .catch(console.error);
     }, [setUser, apiToken]);
