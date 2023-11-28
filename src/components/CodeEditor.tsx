@@ -98,7 +98,7 @@ const CodeEditor = ({ exercise, callback = null, code: defaultCode = '', readOnl
                 value={code}
                 height="55vh"
                 onChange={(val) => {
-                    localStorage.setItem(`${exercise.id}`, code);
+                    localStorage.setItem(`${exercise.id}`, val);
                     setCode(val);
                 }}
                 readOnly={readOnly}
