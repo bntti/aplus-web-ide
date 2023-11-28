@@ -20,13 +20,16 @@ import { useContext, useState } from 'react';
 
 import { Navigate } from 'react-router-dom';
 import { ApiTokenContext } from '../app/StateProvider';
-import { ExerciseWithInfo } from '../routes/exerciseTypes';
+import { ExerciseWithInfo, FileSpec } from '../routes/exerciseTypes';
 
-type Props = {
-    callback: () => void;
-    exercise: ExerciseWithInfo;
-    formKey: string;
-};
+type Props =
+    | {
+          exercise: ExerciseWithInfo;
+          callback: () => void;
+          code?: string;
+          readOnly?: false;
+      }
+    | { exercise: ExerciseWithInfo; callback?: null; code: string; readOnly: true };
 
 const getLanguageFromFilename = (filename: string): string => {
     if (filename.endsWith('.js')) return 'javascript';
@@ -35,7 +38,7 @@ const getLanguageFromFilename = (filename: string): string => {
     return 'text';
 };
 
-const CodeEditor = ({ callback, exercise, formKey }: Props): JSX.Element => {
+const CodeEditor = ({ exercise, callback = null, code: defaultCode = '', readOnly = false }: Props): JSX.Element => {
     if (exercise.exercise_info.form_spec[0].type !== 'file') {
         throw new Error("Exercise that wasn't a file was passed to CodeEditor");
     }
@@ -44,11 +47,13 @@ const CodeEditor = ({ callback, exercise, formKey }: Props): JSX.Element => {
     const theme = useTheme();
 
     const filename = exercise.exercise_info.form_spec[0].title;
-    const [code, setCode] = useState<string>('');
+    const storageCode = localStorage.getItem(`${exercise.id}`);
+    const [code, setCode] = useState<string>((!readOnly && storageCode) || defaultCode);
     const [language, setLanguage] = useState<string>(getLanguageFromFilename(filename));
 
     const submitCode = (): void => {
         const formData = new FormData();
+        const formKey = (exercise.exercise_info.form_spec[0] as FileSpec).key;
         formData.append(formKey, new Blob([code]));
         axios
             .post(`/api/v2/exercises/${exercise.id}/submissions/submit`, formData, {
@@ -93,31 +98,35 @@ const CodeEditor = ({ callback, exercise, formKey }: Props): JSX.Element => {
                 value={code}
                 height="55vh"
                 onChange={(val) => {
+                    localStorage.setItem(`${exercise.id}`, code);
                     setCode(val);
                 }}
+                readOnly={readOnly}
                 theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
                 extensions={[theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme, ...getLanguage()]}
             />
-            <Stack spacing={2} sx={{ mt: 2 }} direction="row" justifyContent="space-between">
-                <Button onClick={submitCode} variant="outlined">
-                    Submit
-                </Button>
-                <FormControl variant="outlined" size="small">
-                    <InputLabel id="programming-language-select">Language</InputLabel>
-                    <Select
-                        sx={{ minWidth: 150 }}
-                        id="programming-language-select"
-                        value={language}
-                        label="Language"
-                        onChange={(event: SelectChangeEvent) => setLanguage(event.target.value)}
-                    >
-                        <MenuItem value="text">Text</MenuItem>
-                        <MenuItem value="python">Python</MenuItem>
-                        <MenuItem value="javascript">JavaScript</MenuItem>
-                        <MenuItem value="scala">Scala</MenuItem>
-                    </Select>
-                </FormControl>
-            </Stack>
+            {!readOnly && (
+                <Stack spacing={2} sx={{ mt: 2 }} direction="row" justifyContent="space-between">
+                    <Button onClick={submitCode} variant="outlined">
+                        Submit
+                    </Button>
+                    <FormControl variant="outlined" size="small">
+                        <InputLabel id="programming-language-select">Language</InputLabel>
+                        <Select
+                            sx={{ minWidth: 150 }}
+                            id="programming-language-select"
+                            value={language}
+                            label="Language"
+                            onChange={(event: SelectChangeEvent) => setLanguage(event.target.value)}
+                        >
+                            <MenuItem value="text">Text</MenuItem>
+                            <MenuItem value="python">Python</MenuItem>
+                            <MenuItem value="javascript">JavaScript</MenuItem>
+                            <MenuItem value="scala">Scala</MenuItem>
+                        </Select>
+                    </FormControl>
+                </Stack>
+            )}
         </>
     );
 };

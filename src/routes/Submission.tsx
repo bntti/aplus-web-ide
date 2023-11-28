@@ -1,9 +1,12 @@
-import { Button, Chip, Container, Paper, Stack, Typography, useTheme } from '@mui/material';
+import { Box, Button, Chip, Container, Paper, Stack, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 import { ApiTokenContext } from '../app/StateProvider';
+import CodeEditor from '../components/CodeEditor';
+import TabPanel from '../components/TabPanel';
+import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 
 const SubmissionSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -14,6 +17,7 @@ const SubmissionSchema = z.object({
         display_name: z.string(),
         max_points: z.number().int().nonnegative(),
     }),
+    files: z.array(z.object({ id: z.number().int().nonnegative() })),
     status: z.string(),
     feedback: z.string(),
 });
@@ -25,16 +29,35 @@ const Submission = (): JSX.Element => {
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
 
+    const [code, setCode] = useState<string | null>(null);
+    const [exercise, setExercise] = useState<ExerciseT | null>(null);
     const [submission, setSubmission] = useState<SubmissionT | null>(null);
+    const [activeIndex, setActiveIndex] = useState<number>(0);
 
     useEffect(() => {
-        if (apiToken === null) return;
-        axios
-            .get(`/api/v2/submissions/${submissionId}`, { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
-                setSubmission(SubmissionSchema.parse(response.data));
-            })
-            .catch(console.error);
+        const getData = async (): Promise<void> => {
+            const submissionResponse = await axios.get(`/api/v2/submissions/${submissionId}`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            });
+            const newSubmission = SubmissionSchema.parse(submissionResponse.data);
+            setSubmission(newSubmission);
+
+            if (newSubmission.files.length === 0) return;
+            const exerciseResponse = await axios.get(`/api/v2/exercises/${newSubmission.exercise.id}`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            });
+            setExercise(ExerciseSchema.parse(exerciseResponse.data));
+
+            const codeResponse = await axios.get(
+                `/api/v2/submissions/${submissionId}/files/${newSubmission.files[0].id}`,
+                {
+                    headers: { Authorization: `Token ${apiToken}` },
+                },
+            );
+            setCode(codeResponse.data);
+        };
+
+        getData().catch(console.error);
     }, [apiToken, submissionId]);
 
     const parseName = (name: string): string => {
@@ -43,7 +66,6 @@ const Submission = (): JSX.Element => {
         return matches ? matches[1] + matches[2] : name;
     };
 
-    if (apiToken === null) return <Navigate replace to="/courses" />;
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
@@ -71,23 +93,42 @@ const Submission = (): JSX.Element => {
                     variant={currentTheme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                 />
             </Stack>
-
-            <Typography variant="h6">Feedback:</Typography>
-            <Container
-                component={Paper}
-                sx={{
-                    display: 'block',
-                    mt: 1,
-                    bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#101010' : '#fff'),
-                    color: (theme) => (theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'),
-                    border: '1px solid',
-                    borderColor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300'),
-                    borderRadius: 2,
-                    fontSize: '0.875rem',
-                }}
-            >
-                <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '').trim()}</pre>
-            </Container>
+            {submission.files.length === 0 ? (
+                <Typography>Feedback for forms is currently not supported</Typography>
+            ) : (
+                <>
+                    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
+                            <Tab label="Feedback" />
+                            <Tab label="Code" />
+                        </Tabs>
+                    </Box>
+                    <TabPanel index={0} value={activeIndex}>
+                        <Container
+                            component={Paper}
+                            sx={{
+                                display: 'block',
+                                mt: 1,
+                                bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#101010' : '#fff'),
+                                color: (theme) => (theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'),
+                                border: '1px solid',
+                                borderColor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300'),
+                                borderRadius: 2,
+                                fontSize: '0.875rem',
+                            }}
+                        >
+                            <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '').trim()}</pre>
+                        </Container>
+                    </TabPanel>
+                    <TabPanel index={1} value={activeIndex}>
+                        {code === null ? (
+                            <Typography>Loading code...</Typography>
+                        ) : (
+                            <CodeEditor exercise={exercise as ExerciseWithInfo} code={code} readOnly />
+                        )}
+                    </TabPanel>
+                </>
+            )}
         </>
     );
 };

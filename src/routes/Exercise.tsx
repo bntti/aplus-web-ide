@@ -23,6 +23,7 @@ import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
+import TabPanel from '../components/TabPanel';
 
 const SubmissionsSchema = z.object({
     submissions_with_points: z.array(
@@ -36,35 +37,6 @@ const SubmissionsSchema = z.object({
 });
 
 type Submissions = z.infer<typeof SubmissionsSchema>;
-
-interface TabPanelProps {
-    children?: React.ReactNode;
-    index: number;
-    value: number;
-}
-
-const CustomTabPanel = (props: TabPanelProps): JSX.Element => {
-    const { children, value, index, ...other } = props;
-
-    return (
-        <div
-            role="tabpanel"
-            hidden={value !== index}
-            id={`simple-tabpanel-${index}`}
-            aria-labelledby={`simple-tab-${index}`}
-            {...other}
-        >
-            {value === index && <Box sx={{ p: 2 }}>{children}</Box>}
-        </div>
-    );
-};
-
-const a11yProps = (index: number): { id: string; 'aria-controls': string } => {
-    return {
-        id: `simple-tab-${index}`,
-        'aria-controls': `simple-tabpanel-${index}`,
-    };
-};
 
 const Exercise = (): JSX.Element => {
     const { state } = useLocation();
@@ -93,8 +65,7 @@ const Exercise = (): JSX.Element => {
         axios
             .get(`/api/v2/exercises/${exerciseId}`, { headers: { Authorization: `Token ${apiToken}` } })
             .then((response) => {
-                const exerciseData: ExerciseT = response.data;
-                setExercise(ExerciseSchema.parse(exerciseData));
+                setExercise(ExerciseSchema.parse(response.data));
             })
             .catch(console.error);
         getSubmissions();
@@ -155,28 +126,24 @@ const Exercise = (): JSX.Element => {
             </Stack>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
-                    <Tab label="Edit code" {...a11yProps(0)} />
-                    <Tab label="Submissions" {...a11yProps(1)} />
+                    <Tab label="Edit code" />
+                    <Tab label="Submissions" />
                 </Tabs>
             </Box>
 
-            <CustomTabPanel value={activeIndex} index={0}>
+            <TabPanel value={activeIndex} index={0}>
                 {exercise.exercise_info === null ? (
                     <Typography>Exercise submission type info unavailable</Typography>
                 ) : numSubmissions >= exercise.max_submissions ? (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
-                    <CodeEditor
-                        callback={callback}
-                        exercise={exercise as ExerciseWithInfo}
-                        formKey={exercise.exercise_info.form_spec[0].key}
-                    />
+                    <CodeEditor callback={callback} exercise={exercise as ExerciseWithInfo} />
                 ) : (
                     <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
                 )}
-            </CustomTabPanel>
+            </TabPanel>
 
-            <CustomTabPanel value={activeIndex} index={1}>
+            <TabPanel value={activeIndex} index={1}>
                 {submissions.submissions_with_points.length === 0 ? (
                     <Typography>No submissions</Typography>
                 ) : (
@@ -222,7 +189,7 @@ const Exercise = (): JSX.Element => {
                         </Table>
                     </TableContainer>
                 )}
-            </CustomTabPanel>
+            </TabPanel>
         </>
     );
 };
