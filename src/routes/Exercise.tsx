@@ -2,6 +2,7 @@ import {
     Box,
     Button,
     Chip,
+    Divider,
     Paper,
     Stack,
     Tab,
@@ -33,7 +34,9 @@ const SubmissionsSchema = z.object({
             grade: z.number().int().nonnegative(),
         }),
     ),
+    points_to_pass: z.number().int().nonnegative(),
     points: z.number().int().nonnegative(),
+    passed: z.boolean(),
 });
 
 type Submissions = z.infer<typeof SubmissionsSchema>;
@@ -98,31 +101,43 @@ const Exercise = (): JSX.Element => {
     return (
         <>
             <Typography variant="h4">{parseName(exercise.display_name)}</Typography>
-            {numSubmissions > 0 ? (
-                <Typography>
-                    Submissions done {numSubmissions}/{exercise.max_submissions}
-                </Typography>
-            ) : (
-                <Typography>Max submissions {exercise.max_submissions}</Typography>
-            )}
+            <Stack
+                direction="row"
+                spacing={2}
+                alignItems="center"
+                divider={<Divider orientation="vertical" flexItem />}
+            >
+                {numSubmissions > 0 ? (
+                    <Typography>
+                        Submissions done {numSubmissions}/{exercise.max_submissions}
+                    </Typography>
+                ) : (
+                    <Typography>Max submissions {exercise.max_submissions}</Typography>
+                )}
+                {submissions.passed ? (
+                    <Typography color="success.main">Passed</Typography>
+                ) : (
+                    <Typography>Points required to pass {submissions.points_to_pass}</Typography>
+                )}
+            </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
                 <Button variant="outlined" size="small" onClick={() => navigate(`/course/${exercise.course.id}`)}>
                     Back to course
                 </Button>
-                {numSubmissions > 0 && (
-                    <Chip
-                        sx={{ mt: 0.5 }}
-                        label={`${submissions.points} / ${exercise.max_points}`}
-                        color={
-                            submissions.points === 0 && exercise.max_points > 0
-                                ? 'error'
-                                : submissions.points < exercise.max_points
-                                  ? 'warning'
-                                  : 'success'
-                        }
-                        variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                    />
-                )}
+                <Chip
+                    sx={{ mt: 0.5 }}
+                    label={`${submissions.points} / ${exercise.max_points}`}
+                    color={
+                        numSubmissions === 0
+                            ? 'default'
+                            : submissions.points === 0 && exercise.max_points > 0
+                              ? 'error'
+                              : submissions.points < exercise.max_points
+                                ? 'warning'
+                                : 'success'
+                    }
+                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+                />
             </Stack>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>

@@ -1,3 +1,5 @@
+import CloseIcon from '@mui/icons-material/Close';
+import CheckIcon from '@mui/icons-material/Done';
 import {
     Chip,
     Container,
@@ -137,21 +139,25 @@ const Course = (): JSX.Element => {
                             sx={{ mb: 2 }}
                             divider={<Divider orientation="vertical" flexItem />}
                         >
-                            <Stack direction="row" spacing={1}>
-                                <Typography>Points required to pass</Typography>
-                                <Chip
-                                    size="small"
-                                    label={`${module.points} / ${module.points_to_pass}`}
-                                    color={module.passed ? 'success' : 'error'}
-                                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                                />
-                            </Stack>
+                            {module.passed ? (
+                                <Typography color="success.main">Passed</Typography>
+                            ) : module.points < module.points_to_pass ? (
+                                <Typography>Points required to pass {module.points_to_pass}</Typography>
+                            ) : (
+                                <Typography>Some exercises not passed</Typography>
+                            )}
                             <Stack direction="row" spacing={1}>
                                 <Typography>Points</Typography>
                                 <Chip
                                     size="small"
                                     label={`${module.points} / ${module.max_points}`}
-                                    color={module.points < module.max_points ? 'warning' : 'success'}
+                                    color={
+                                        module.points < module.points_to_pass
+                                            ? 'error'
+                                            : module.points < module.max_points
+                                              ? 'warning'
+                                              : 'success'
+                                    }
                                     variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                                 />
                             </Stack>
@@ -162,6 +168,9 @@ const Course = (): JSX.Element => {
                                     <TableRow component="div">
                                         <TableCell component="div">
                                             <Typography>Exercise</Typography>
+                                        </TableCell>
+                                        <TableCell component="div" align="right">
+                                            <Typography>Passed</Typography>
                                         </TableCell>
                                         <TableCell component="div" align="right">
                                             <Typography>Submissions</Typography>
@@ -186,6 +195,13 @@ const Course = (): JSX.Element => {
                                         >
                                             <TableCell component="div" sx={{ width: '70%' }}>
                                                 <Typography>{parseName(exercise.name)}</Typography>
+                                            </TableCell>
+                                            <TableCell component="div" align="right">
+                                                {exercise.passed ? (
+                                                    <CheckIcon color="success" />
+                                                ) : (
+                                                    <CloseIcon color="error" />
+                                                )}
                                             </TableCell>
                                             <TableCell component="div" align="right">
                                                 <Chip

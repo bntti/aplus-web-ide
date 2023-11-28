@@ -202,7 +202,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
     };
 
     return (
-        <Container component={Paper} sx={{ pt: 1, pb: 1 }}>
+        <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
             <form onSubmit={handleSubmit}>
                 {exercise.exercise_info.form_spec
                     .filter((portion): portion is FormSpec => portion.type !== 'static' && portion.type !== 'file')
