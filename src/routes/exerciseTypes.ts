@@ -19,7 +19,7 @@ const TextSchema = z.object({
     description: z.string().optional(),
 });
 const FileSchema = z.object({ type: z.literal('file'), key: z.string(), title: z.string() });
-const StaticSchema = z.object({ type: z.literal('static'), description: z.string().optional() });
+const StaticSchema = z.object({ type: z.literal('static'), key: z.string(), description: z.string().optional() });
 const GeneralSchema = z.union([RadioSchema, DropdownSchema, CheckboxSchema, TextSchema, FileSchema, StaticSchema]);
 
 export const ExerciseSchema = z.object({

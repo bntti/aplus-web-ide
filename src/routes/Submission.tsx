@@ -94,7 +94,12 @@ const Submission = (): JSX.Element => {
                 />
             </Stack>
             {submission.files.length === 0 ? (
-                <Typography>Feedback for forms is currently not supported</Typography>
+                <>
+                    <Typography variant="h5">Feedback:</Typography>
+                    <Container component={Paper} sx={{ p: 2 }}>
+                        <div dangerouslySetInnerHTML={{ __html: submission.feedback }} />
+                    </Container>
+                </>
             ) : (
                 <>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -104,20 +109,8 @@ const Submission = (): JSX.Element => {
                         </Tabs>
                     </Box>
                     <TabPanel index={0} value={activeIndex}>
-                        <Container
-                            component={Paper}
-                            sx={{
-                                display: 'block',
-                                mt: 1,
-                                bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#101010' : '#fff'),
-                                color: (theme) => (theme.palette.mode === 'dark' ? 'grey.300' : 'grey.800'),
-                                border: '1px solid',
-                                borderColor: (theme) => (theme.palette.mode === 'dark' ? 'grey.800' : 'grey.300'),
-                                borderRadius: 2,
-                                fontSize: '0.875rem',
-                            }}
-                        >
-                            <pre>{submission.feedback.replace('<pre>', '').replace('</pre>', '').trim()}</pre>
+                        <Container component={Paper} sx={{ p: 2 }}>
+                            <div dangerouslySetInnerHTML={{ __html: submission.feedback }} />
                         </Container>
                     </TabPanel>
                     <TabPanel index={1} value={activeIndex}>

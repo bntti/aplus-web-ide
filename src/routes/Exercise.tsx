@@ -26,7 +26,7 @@ import FormExercise from '../components/FormExercise';
 import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import TabPanel from '../components/TabPanel';
 
-const SubmissionsSchema = z.object({
+const SubmitterStatsSchema = z.object({
     submissions_with_points: z.array(
         z.object({
             id: z.number().int().nonnegative(),
@@ -38,7 +38,17 @@ const SubmissionsSchema = z.object({
     points: z.number().int().nonnegative(),
     passed: z.boolean(),
 });
+type SubmitterStats = z.infer<typeof SubmitterStatsSchema>;
 
+const SubmissionsSchema = z.object({
+    results: z.array(
+        z.object({
+            id: z.number().int().nonnegative(),
+            grade: z.number().int().nonnegative(),
+            submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
+        }),
+    ),
+});
 type Submissions = z.infer<typeof SubmissionsSchema>;
 
 const Exercise = (): JSX.Element => {
@@ -49,29 +59,32 @@ const Exercise = (): JSX.Element => {
     const theme = useTheme();
 
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
+    const [submitterStats, setSubmitterStats] = useState<SubmitterStats | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
-    const getSubmissions = useCallback((): void => {
-        axios
-            .get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            })
-            .then((response) => {
-                setSubmissions(SubmissionsSchema.parse(response.data));
-            })
-            .catch(console.error);
+    const getSubmissions = useCallback(async (): Promise<void> => {
+        const submitterStatsResponse = await axios.get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
+            headers: { Authorization: `Token ${apiToken}` },
+        });
+        setSubmitterStats(SubmitterStatsSchema.parse(submitterStatsResponse.data));
+
+        const submissionsResponse = await axios.get(`/api/v2/exercises/${exerciseId}/submissions/me`, {
+            headers: { Authorization: `Token ${apiToken}` },
+        });
+        setSubmissions(SubmissionsSchema.parse(submissionsResponse.data));
     }, [apiToken, exerciseId]);
 
     useEffect(() => {
         if (apiToken === null) return;
-        axios
-            .get(`/api/v2/exercises/${exerciseId}`, { headers: { Authorization: `Token ${apiToken}` } })
-            .then((response) => {
-                setExercise(ExerciseSchema.parse(response.data));
-            })
-            .catch(console.error);
-        getSubmissions();
+        const getData = async (): Promise<void> => {
+            const exerciseResponse = await axios.get(`/api/v2/exercises/${exerciseId}`, {
+                headers: { Authorization: `Token ${apiToken}` },
+            });
+            setExercise(ExerciseSchema.parse(exerciseResponse.data));
+            await getSubmissions();
+        };
+        getData().catch(console.error);
     }, [apiToken, exerciseId, getSubmissions]);
 
     useEffect(() => {
@@ -82,7 +95,7 @@ const Exercise = (): JSX.Element => {
     }, [state, activeIndex]);
 
     const callback = (): void => {
-        getSubmissions();
+        getSubmissions().catch(console.error);
         setActiveIndex(1);
     };
 
@@ -92,11 +105,12 @@ const Exercise = (): JSX.Element => {
         return matches ? matches[1] + matches[2] : name;
     };
 
-    const numSubmissions = submissions ? submissions.submissions_with_points.length : 0;
+    const numSubmissions = submitterStats ? submitterStats.submissions_with_points.length : 0;
 
     if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
-    if (exercise === null || submissions === null) return <Typography>Loading exercise...</Typography>;
+    if (exercise === null || submitterStats === null || submissions === null)
+        return <Typography>Loading exercise...</Typography>;
 
     return (
         <>
@@ -114,10 +128,10 @@ const Exercise = (): JSX.Element => {
                 ) : (
                     <Typography>Max submissions {exercise.max_submissions}</Typography>
                 )}
-                {submissions.passed ? (
+                {submitterStats.passed ? (
                     <Typography color="success.main">Passed</Typography>
                 ) : (
-                    <Typography>Points required to pass {submissions.points_to_pass}</Typography>
+                    <Typography>Points required to pass {submitterStats.points_to_pass}</Typography>
                 )}
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
@@ -126,13 +140,13 @@ const Exercise = (): JSX.Element => {
                 </Button>
                 <Chip
                     sx={{ mt: 0.5 }}
-                    label={`${submissions.points} / ${exercise.max_points}`}
+                    label={`${submitterStats.points} / ${exercise.max_points}`}
                     color={
                         numSubmissions === 0
                             ? 'default'
-                            : submissions.points === 0 && exercise.max_points > 0
+                            : submitterStats.points === 0 && exercise.max_points > 0
                               ? 'error'
-                              : submissions.points < exercise.max_points
+                              : submitterStats.points < exercise.max_points
                                 ? 'warning'
                                 : 'success'
                     }
@@ -159,7 +173,7 @@ const Exercise = (): JSX.Element => {
             </TabPanel>
 
             <TabPanel value={activeIndex} index={1}>
-                {submissions.submissions_with_points.length === 0 ? (
+                {submitterStats.submissions_with_points.length === 0 ? (
                     <Typography>No submissions</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ mt: 1 }}>
@@ -172,7 +186,7 @@ const Exercise = (): JSX.Element => {
                                 </TableCell>
                             </TableHead>
                             <TableBody component="div">
-                                {submissions.submissions_with_points.map((submission, index) => (
+                                {submissions.results.map((submission, index) => (
                                     <TableRow
                                         key={submission.id}
                                         component={Link}

@@ -12,7 +12,6 @@ import {
     RadioGroup,
     Select,
     TextField,
-    Typography,
 } from '@mui/material';
 import axios from 'axios';
 import { useState } from 'react';
@@ -50,7 +49,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <Typography>{translate(portion.description)}</Typography>}
+                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
                 <RadioGroup
                     id={portion.key}
                     aria-labelledby={portion.key}
@@ -78,7 +77,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <Typography>{translate(portion.description)}</Typography>}
+                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
                 <TextField
                     id={portion.key}
                     aria-labelledby={portion.key}
@@ -103,7 +102,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <Typography>{translate(portion.description)}</Typography>}
+                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
                 <Select
                     id={portion.key}
                     labelId={portion.key}
@@ -131,7 +130,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <Typography>{translate(portion.description)}</Typography>}
+                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
                 <FormGroup id={portion.key} aria-labelledby={portion.key}>
                     {localValue.map(({ key, value, checked }) => (
                         <FormControlLabel
@@ -205,12 +204,21 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
             <form onSubmit={handleSubmit}>
                 {exercise.exercise_info.form_spec
-                    .filter((portion): portion is FormSpec => portion.type !== 'static' && portion.type !== 'file')
-                    .map((portion) => (
-                        <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
-                            <Portion portion={portion} />
-                        </FormControl>
-                    ))}
+                    .filter((portion) => portion.type !== 'file')
+                    .map((portion) =>
+                        portion.type === 'static' ? (
+                            portion.description && (
+                                <div
+                                    key={portion.key}
+                                    dangerouslySetInnerHTML={{ __html: translate(portion.description) }}
+                                />
+                            )
+                        ) : (
+                            <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
+                                <Portion portion={portion as FormSpec} />
+                            </FormControl>
+                        ),
+                    )}
                 <Button type="submit">Submit</Button>
             </form>
         </Container>
