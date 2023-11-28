@@ -14,7 +14,7 @@ import {
     TextField,
 } from '@mui/material';
 import axios from 'axios';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { CheckboxSpec, DropdownSpec, ExerciseWithInfo, FormSpec, RadioSpec, TextSpec } from '../routes/exerciseTypes';
 
 type Props = { exercise: ExerciseWithInfo; apiToken: string; callback: () => void };
@@ -178,6 +178,14 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
                 return <CheckboxPortion portion={portion} />;
         }
     };
+
+    useEffect(() => {
+        // @ts-expect-error Mathjax
+        if (typeof window?.MathJax !== 'undefined') {
+            // @ts-expect-error Mathjax
+            window.MathJax.typeset();
+        }
+    });
 
     const handleSubmit = (event: React.SyntheticEvent): void => {
         event.preventDefault();

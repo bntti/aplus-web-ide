@@ -66,6 +66,14 @@ const Submission = (): JSX.Element => {
         return matches ? matches[1] + matches[2] : name;
     };
 
+    useEffect(() => {
+        // @ts-expect-error Mathjax
+        if (typeof window?.MathJax !== 'undefined') {
+            // @ts-expect-error Mathjax
+            window.MathJax.typeset();
+        }
+    });
+
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>
