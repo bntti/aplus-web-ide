@@ -22,7 +22,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { z } from 'zod';
 
 import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
-import { ApiTokenContext } from '../app/StateProvider';
+import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import TabPanel from '../components/TabPanel';
@@ -56,6 +56,7 @@ const Exercise = (): JSX.Element => {
     const { state } = useLocation();
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const { language } = useContext(LanguageContext);
     const navigate = useNavigate();
     const theme = useTheme();
 
@@ -102,7 +103,9 @@ const Exercise = (): JSX.Element => {
     const parseName = (name: string): string => {
         const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
         const matches = name.match(regexp);
-        return matches ? matches[1] + matches[2] : name;
+        if (language === 'english') return matches ? matches[1] + matches[2] : name;
+        else if (language === 'finnish') return matches ? matches[1] + matches[3] : name;
+        throw new Error(`Invalid language ${language}`);
     };
 
     const numSubmissions = submitterStats ? submitterStats.submissions_with_points.length : 0;

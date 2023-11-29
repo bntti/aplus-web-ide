@@ -20,7 +20,7 @@ import { useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
-import { ApiTokenContext } from '../app/StateProvider';
+import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
 
 const CourseSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -68,6 +68,7 @@ const ExercisesSchema = z.object({
 const Course = (): JSX.Element => {
     const { courseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const { language } = useContext(LanguageContext);
     const theme = useTheme();
 
     const [course, setCourse] = useState<CourseT | null>(null);
@@ -105,7 +106,9 @@ const Course = (): JSX.Element => {
     const parseName = (name: string): string => {
         const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
         const matches = name.match(regexp);
-        return matches ? matches[1] + matches[2] : name;
+        if (language === 'english') return matches ? matches[1] + matches[2] : name;
+        else if (language === 'finnish') return matches ? matches[1] + matches[3] : name;
+        throw new Error(`Invalid language ${language}`);
     };
 
     if (apiToken === null) return <Navigate replace to="/courses" />;

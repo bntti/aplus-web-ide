@@ -9,6 +9,14 @@ type ApiTokenContextT = {
 };
 export const ApiTokenContext = createContext<ApiTokenContextT>({} as ApiTokenContextT);
 
+// Language
+type Language = 'finnish' | 'english';
+type LanguageContextT = {
+    language: Language;
+    setLanguage: React.Dispatch<React.SetStateAction<Language>>;
+};
+export const LanguageContext = createContext<LanguageContextT>({} as LanguageContextT);
+
 // User
 export const UserSchema = z.object({
     full_name: z.string(),
@@ -31,10 +39,13 @@ export const ThemeContext = createContext<ThemeContextT>({} as ThemeContextT);
 
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const [apiToken, setApiToken] = useState<ApiToken>(null);
+    const [language, setLanguage] = useState<Language>('english');
     const [user, setUser] = useState<User>(null);
     return (
         <ApiTokenContext.Provider value={{ apiToken, setApiToken }}>
-            <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
+            <LanguageContext.Provider value={{ language, setLanguage }}>
+                <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
+            </LanguageContext.Provider>
         </ApiTokenContext.Provider>
     );
 };

@@ -14,14 +14,17 @@ import {
     TextField,
 } from '@mui/material';
 import axios from 'axios';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 
+import { LanguageContext } from '../app/StateProvider';
 import { CheckboxSpec, DropdownSpec, ExerciseWithInfo, FormSpec, RadioSpec, TextSpec } from '../routes/exerciseTypes';
 
 type Props = { exercise: ExerciseWithInfo; apiToken: string; callback: () => void };
 type FormCheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
 
 const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
+    const { language } = useContext(LanguageContext);
+
     const defaultFormValues: { [key: string]: string } = {};
     const defaultFormCheckboxValues: FormCheckBoxValues = {};
     for (const portion of exercise.exercise_info.form_spec) {
@@ -41,8 +44,15 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
 
     const i18n = exercise.exercise_info.form_i18n;
     const translate = (value: string): string => {
-        if (value in i18n && 'en' in i18n[value]) return i18n[value].en; // TODO: language
-        return value;
+        if (!(value in i18n) || (!('en' in i18n[value]) && !('fi' in i18n[value]))) return value;
+
+        // Preferred language
+        if (language === 'english' && 'en' in i18n[value]) return i18n[value].en;
+        else if (language === 'finnish' && 'fi' in i18n[value]) return i18n[value].fi;
+
+        // Fallback to other language
+        if ('en' in i18n[value]) return i18n[value].en;
+        else return i18n[value].fi;
     };
 
     const RadioPortion = ({ portion }: { portion: RadioSpec }): JSX.Element => {

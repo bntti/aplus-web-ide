@@ -5,7 +5,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
-import { ApiTokenContext } from '../app/StateProvider';
+import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import TabPanel from '../components/TabPanel';
 
@@ -29,6 +29,7 @@ const Submission = (): JSX.Element => {
     const navigate = useNavigate();
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const { language } = useContext(LanguageContext);
 
     const [code, setCode] = useState<string | null>(null);
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
@@ -64,7 +65,9 @@ const Submission = (): JSX.Element => {
     const parseName = (name: string): string => {
         const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
         const matches = name.match(regexp);
-        return matches ? matches[1] + matches[2] : name;
+        if (language === 'english') return matches ? matches[1] + matches[2] : name;
+        else if (language === 'finnish') return matches ? matches[1] + matches[3] : name;
+        throw new Error(`Invalid language ${language}`);
     };
 
     useEffect(() => {
