@@ -1,12 +1,14 @@
 import { Card, CardActionArea, CardContent, Grid, Typography } from '@mui/material';
 import { useContext } from 'react';
-import { Link } from 'react-router-dom';
-import { UserContext } from '../app/StateProvider';
+import { Link, Navigate } from 'react-router-dom';
+
+import { ApiTokenContext, UserContext } from '../app/StateProvider';
 
 const Courses = (): JSX.Element => {
     const { user } = useContext(UserContext);
+    const { apiToken } = useContext(ApiTokenContext);
 
-    if (user === null) return <Typography>Loading courses...</Typography>;
+    if (apiToken === null || user === null) return <Navigate replace to="/login" />;
     return (
         <Grid container spacing={10}>
             {user.enrolled_courses.map((course) => (

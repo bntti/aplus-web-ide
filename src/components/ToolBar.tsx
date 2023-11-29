@@ -1,15 +1,18 @@
 import { Brightness3, Brightness7 } from '@mui/icons-material';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { AppBar, Button, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
 import { useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
 import { ApiTokenContext, ThemeContext, UserContext } from '../app/StateProvider';
-import LogoutIcon from '@mui/icons-material/Logout';
 
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
+    const navigate = useNavigate();
     const { colorMode } = useContext(ThemeContext);
     const { apiToken, setApiToken } = useContext(ApiTokenContext);
     const { user, setUser } = useContext(UserContext);
+
     return (
         <AppBar position="static" sx={{ mb: 2.5 }}>
             <Toolbar>
@@ -33,7 +36,9 @@ const ToolBar = (): JSX.Element => {
                         <IconButton
                             color="inherit"
                             onClick={() => {
-                                setApiToken(null), setUser(null);
+                                setApiToken(null);
+                                setUser(null);
+                                navigate('/login');
                             }}
                             size="large"
                         >

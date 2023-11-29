@@ -20,10 +20,11 @@ import axios from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
+
+import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
-import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import TabPanel from '../components/TabPanel';
 
 const SubmitterStatsSchema = z.object({
@@ -76,7 +77,6 @@ const Exercise = (): JSX.Element => {
     }, [apiToken, exerciseId]);
 
     useEffect(() => {
-        if (apiToken === null) return;
         const getData = async (): Promise<void> => {
             const exerciseResponse = await axios.get(`/api/v2/exercises/${exerciseId}`, {
                 headers: { Authorization: `Token ${apiToken}` },

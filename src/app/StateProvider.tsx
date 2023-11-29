@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, createContext } from 'react';
 import { z } from 'zod';
 
 // Api token
@@ -7,7 +7,7 @@ type ApiTokenContextT = {
     apiToken: ApiToken;
     setApiToken: React.Dispatch<React.SetStateAction<ApiToken>>;
 };
-export const ApiTokenContext = React.createContext<ApiTokenContextT>({} as ApiTokenContextT);
+export const ApiTokenContext = createContext<ApiTokenContextT>({} as ApiTokenContextT);
 
 // User
 export const UserSchema = z.object({
@@ -23,11 +23,11 @@ export const UserSchema = z.object({
 });
 type User = z.infer<typeof UserSchema> | null;
 type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
-export const UserContext = React.createContext<UserContextT>({} as UserContextT);
+export const UserContext = createContext<UserContextT>({} as UserContextT);
 
 // Theme
 type ThemeContextT = { colorMode: { toggleTheme: () => void } };
-export const ThemeContext = React.createContext<ThemeContextT>({} as ThemeContextT);
+export const ThemeContext = createContext<ThemeContextT>({} as ThemeContextT);
 
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const [apiToken, setApiToken] = useState<ApiToken>(null);

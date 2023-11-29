@@ -17,8 +17,8 @@ import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useContext, useState } from 'react';
-
 import { Navigate } from 'react-router-dom';
+
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseWithInfo, FileSpec } from '../routes/exerciseTypes';
 
@@ -90,7 +90,7 @@ const CodeEditor = ({ exercise, callback = null, code: defaultCode = '', readOnl
     const editorLightTheme = githubLight;
     const editorDarkTheme = githubDark;
 
-    if (apiToken === null) return <Navigate replace to="/courses" />;
+    if (apiToken === null) return <Navigate replace to="/login" />;
     return (
         <>
             <Typography sx={{ mb: 0.25 }}>{exercise.exercise_info.form_spec[0].title}</Typography>

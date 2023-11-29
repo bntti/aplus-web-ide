@@ -1,12 +1,13 @@
 import { Box, Button, Chip, Container, Paper, Stack, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
+
+import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import { ApiTokenContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import TabPanel from '../components/TabPanel';
-import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 
 const SubmissionSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -74,6 +75,7 @@ const Submission = (): JSX.Element => {
         }
     });
 
+    if (apiToken === null) return <Navigate replace to="/courses" />;
     if (submission === null) return <Typography>Loading exercise...</Typography>;
     return (
         <>

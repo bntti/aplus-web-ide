@@ -19,6 +19,7 @@ import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
+
 import { ApiTokenContext } from '../app/StateProvider';
 
 const CourseSchema = z.object({
@@ -74,7 +75,6 @@ const Course = (): JSX.Element => {
     const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
 
     useEffect(() => {
-        if (apiToken === null) return;
         const getData = async (): Promise<void> => {
             const courseResponse = await axios.get(`/api/v2/courses/${courseId}`, {
                 headers: { Authorization: `Token ${apiToken}` },
