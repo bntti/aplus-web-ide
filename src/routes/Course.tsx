@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
@@ -111,7 +111,6 @@ const Course = (): JSX.Element => {
         throw new Error(`Invalid language ${language}`);
     };
 
-    if (apiToken === null) return <Navigate replace to="/courses" />;
     if (course === null || coursePoints === null || exerciseMaxSubmissions === null) {
         return <Typography>Loading course...</Typography>;
     }

@@ -1,14 +1,13 @@
 import { Card, CardActionArea, CardContent, Grid, Typography } from '@mui/material';
 import { useContext } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
-import { ApiTokenContext, UserContext } from '../app/StateProvider';
+import { UserContext } from '../app/StateProvider';
 
 const Courses = (): JSX.Element => {
     const { user } = useContext(UserContext);
-    const { apiToken } = useContext(ApiTokenContext);
 
-    if (apiToken === null || user === null) return <Navigate replace to="/login" />;
+    if (user === null) throw new Error('Courses was called even though user is null');
     return (
         <Grid container spacing={10}>
             {user.enrolled_courses.map((course) => (

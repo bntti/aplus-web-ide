@@ -51,6 +51,8 @@ const ToolBar = (): JSX.Element => {
                             onClick={() => {
                                 setApiToken(null);
                                 setUser(null);
+                                localStorage.removeItem('apiToken');
+                                localStorage.removeItem('user');
                                 navigate('/login');
                             }}
                             size="large"

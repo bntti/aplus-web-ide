@@ -19,8 +19,12 @@ const Login = (): JSX.Element => {
             .catch((error) => {
                 throw error;
             });
+
+        const user = UserSchema.parse(userResponse.data);
         setApiToken(apiToken);
-        setUser(UserSchema.parse(userResponse.data));
+        setUser(user);
+        localStorage.setItem('apiToken', apiToken);
+        localStorage.setItem('user', JSON.stringify(user));
         navigate('/courses');
     };
 

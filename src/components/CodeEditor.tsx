@@ -18,7 +18,6 @@ import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useContext, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseWithInfo, FileSpec } from '../routes/exerciseTypes';
@@ -107,7 +106,6 @@ const CodeEditor = ({
     const editorLightTheme = githubLight;
     const editorDarkTheme = githubDark;
 
-    if (apiToken === null) return <Navigate replace to="/login" />;
     return (
         <>
             <Tabs

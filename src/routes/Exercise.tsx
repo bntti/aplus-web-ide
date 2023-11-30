@@ -110,7 +110,8 @@ const Exercise = (): JSX.Element => {
 
     const numSubmissions = submitterStats ? submitterStats.submissions_with_points.length : 0;
 
-    if (apiToken === null || exerciseId === undefined) return <Navigate replace to="/courses" />;
+    if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
+    if (exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
     if (exercise === null || submitterStats === null || submissions === null)
         return <Typography>Loading exercise...</Typography>;
