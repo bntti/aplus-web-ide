@@ -31,7 +31,7 @@ const Submission = (): JSX.Element => {
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
 
-    const [code, setCode] = useState<string | null>(null);
+    const [codes, setCodes] = useState<string[] | null>(null);
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
     const [submission, setSubmission] = useState<SubmissionT | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -50,13 +50,17 @@ const Submission = (): JSX.Element => {
             });
             setExercise(ExerciseSchema.parse(exerciseResponse.data));
 
-            const codeResponse = await axios.get(
-                `/api/v2/submissions/${submissionId}/files/${newSubmission.files[0].id}`,
-                {
-                    headers: { Authorization: `Token ${apiToken}` },
-                },
-            );
-            setCode(codeResponse.data);
+            const newCodes = [];
+            for (let i = 0; i < newSubmission.files.length; i++) {
+                const codeResponse = await axios.get(
+                    `/api/v2/submissions/${submissionId}/files/${newSubmission.files[i].id}`,
+                    {
+                        headers: { Authorization: `Token ${apiToken}` },
+                    },
+                );
+                newCodes.push(codeResponse.data);
+            }
+            setCodes(newCodes);
         };
 
         getData().catch(console.error);
@@ -127,10 +131,10 @@ const Submission = (): JSX.Element => {
                         </Container>
                     </TabPanel>
                     <TabPanel index={1} value={activeIndex}>
-                        {code === null ? (
+                        {codes === null ? (
                             <Typography>Loading code...</Typography>
                         ) : (
-                            <CodeEditor exercise={exercise as ExerciseWithInfo} code={code} readOnly />
+                            <CodeEditor exercise={exercise as ExerciseWithInfo} codes={codes} readOnly />
                         )}
                     </TabPanel>
                 </>

@@ -17,30 +17,50 @@ import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 
 import { LanguageContext } from '../app/StateProvider';
-import { CheckboxSpec, DropdownSpec, ExerciseWithInfo, FormSpec, RadioSpec, TextSpec } from '../routes/exerciseTypes';
+import {
+    CheckboxSpec,
+    DropdownSpec,
+    ExerciseWithInfo,
+    FormSpec,
+    RadioSpec,
+    StaticSpec,
+    TextSpec,
+} from '../routes/exerciseTypes';
 
 type Props = { exercise: ExerciseWithInfo; apiToken: string; callback: () => void };
-type FormCheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
+type CheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
 
-const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
-    const { language } = useContext(LanguageContext);
-
+const getDefaultFormValues = (exercise: ExerciseWithInfo): { [key: string]: string } => {
     const defaultFormValues: { [key: string]: string } = {};
-    const defaultFormCheckboxValues: FormCheckBoxValues = {};
     for (const portion of exercise.exercise_info.form_spec) {
-        if (portion.type === 'static') continue;
-        if (portion.type === 'file') throw new Error('Tried to pass file type form to FormExercise');
+        if (portion.type === 'dropdown' || portion.type === 'radio') {
+            defaultFormValues[portion.key] = portion.enum[0];
+        }
+    }
+    return defaultFormValues;
+};
+
+const getDefaultCheckboxValues = (exercise: ExerciseWithInfo): CheckBoxValues => {
+    const defaultFormCheckboxValues: CheckBoxValues = {};
+    for (const portion of exercise.exercise_info.form_spec) {
         if (portion.type === 'checkbox') {
             defaultFormCheckboxValues[portion.key] = [];
             for (const [key, value] of Object.entries(portion.titleMap)) {
                 defaultFormCheckboxValues[portion.key].push({ key, value, checked: false });
             }
-        } else if (portion.type === 'dropdown' || portion.type === 'radio') {
-            defaultFormValues[portion.key] = portion.enum[0];
         }
     }
-    const [formValues, setFormValues] = useState<{ [key: string]: string }>(defaultFormValues);
-    const [formCheckboxValues, setFormCheckboxValues] = useState<FormCheckBoxValues>(defaultFormCheckboxValues);
+    return defaultFormCheckboxValues;
+};
+
+const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
+    if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
+        throw new Error('Tried to pass file type form to FormExercise');
+    }
+
+    const { language } = useContext(LanguageContext);
+    const [formValues, setFormValues] = useState<{ [key: string]: string }>(getDefaultFormValues(exercise));
+    const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(getDefaultCheckboxValues(exercise));
 
     const i18n = exercise.exercise_info.form_i18n;
     const translate = (value: string): string => {
@@ -137,7 +157,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
     };
     const CheckboxPortion = ({ portion }: { portion: CheckboxSpec }): JSX.Element => {
         type LocalState = { key: string; value: string; checked: boolean }[];
-        const [localValue, setLocalValue] = useState<LocalState>(formCheckboxValues[portion.key]);
+        const [localValue, setLocalValue] = useState<LocalState>(checkboxValues[portion.key]);
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
@@ -157,10 +177,10 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
                                             ),
                                         );
 
-                                        formCheckboxValues[portion.key] = localValue.map((item) =>
+                                        checkboxValues[portion.key] = localValue.map((item) =>
                                             item.key === key ? { ...item, checked: event.target.checked } : item,
                                         );
-                                        setFormCheckboxValues(formCheckboxValues);
+                                        setcheckboxValues(checkboxValues);
                                     }}
                                     required={portion.required}
                                 />
@@ -205,7 +225,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         for (const [portionKey, selectedValue] of Object.entries(formValues)) {
             formData.append(portionKey, selectedValue);
         }
-        for (const [portionKey, values] of Object.entries(formCheckboxValues)) {
+        for (const [portionKey, values] of Object.entries(checkboxValues)) {
             for (const { key, checked } of values) {
                 if (checked === true) formData.append(portionKey, key);
             }
@@ -219,25 +239,25 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
             .catch(console.error);
     };
 
+    type PortionType = (FormSpec | StaticSpec)[];
+    const portions: PortionType = exercise.exercise_info.form_spec as unknown as PortionType;
     return (
         <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
             <form onSubmit={handleSubmit}>
-                {exercise.exercise_info.form_spec
-                    .filter((portion) => portion.type !== 'file')
-                    .map((portion) =>
-                        portion.type === 'static' ? (
-                            portion.description && (
-                                <div
-                                    key={portion.key}
-                                    dangerouslySetInnerHTML={{ __html: translate(portion.description) }}
-                                />
-                            )
-                        ) : (
-                            <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
-                                <Portion portion={portion as FormSpec} />
-                            </FormControl>
-                        ),
-                    )}
+                {portions.map((portion) =>
+                    portion.type === 'static' ? (
+                        portion.description && (
+                            <div
+                                key={portion.key}
+                                dangerouslySetInnerHTML={{ __html: translate(portion.description) }}
+                            />
+                        )
+                    ) : (
+                        <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
+                            <Portion portion={portion} />
+                        </FormControl>
+                    ),
+                )}
                 <Button type="submit">Submit</Button>
             </form>
         </Container>
