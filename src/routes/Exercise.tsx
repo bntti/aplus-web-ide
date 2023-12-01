@@ -89,13 +89,21 @@ const Exercise = (): JSX.Element => {
             setExercise(newExercise);
             await getSubmissions();
 
-            if (newExercise.templates) {
-                // TODO: handle multiple templates
-                const templateResponse = await axios.get(
-                    newExercise.templates.replace('http://grader:8080', '/grader'), // TODO: change in prod?
-                    { headers: { Authorization: `Bearer ${graderToken}` } },
-                );
-                setTemplates([templateResponse.data]);
+            if (newExercise.templates && newExercise.exercise_info) {
+                const templateNames = newExercise.templates.split(' ');
+                const newTemplates = [];
+                for (const template of templateNames) {
+                    const templateResponse = await axios.get(
+                        template.replace('http://grader:8080', '/grader'), // TODO: change in prod?
+                        { headers: { Authorization: `Bearer ${graderToken}` } },
+                    );
+                    newTemplates.push(templateResponse.data);
+                }
+                if (newTemplates.length !== newExercise.exercise_info.form_spec.length) {
+                    throw new Error('There are missing templates'); // Assuming only file portions
+                }
+                // Assumes correct order of templates
+                setTemplates(newTemplates);
             }
         };
         getData().catch(console.error);
