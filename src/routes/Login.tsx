@@ -3,11 +3,12 @@ import axios from 'axios';
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { ApiTokenContext, UserContext, UserSchema } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, UserContext, UserSchema } from '../app/StateProvider';
 
 const Login = (): JSX.Element => {
     const { setApiToken } = useContext(ApiTokenContext);
     const { setUser } = useContext(UserContext);
+    const { setGraderToken } = useContext(GraderTokenContext);
     const navigate = useNavigate();
 
     const [invalidToken, setInvalidToken] = useState(false);
@@ -19,12 +20,25 @@ const Login = (): JSX.Element => {
             .catch((error) => {
                 throw error;
             });
-
         const user = UserSchema.parse(userResponse.data);
+
+        const graderTokenResponse = await axios.post(
+            '/api/v2/get-token',
+            {
+                taud: 'grader',
+                exp: '01:00:00',
+                permissions: user.enrolled_courses.map((course) => ['exercise', 1, { id: course.id }]),
+            },
+            { headers: { Authorization: `Token ${apiToken}` } },
+        );
+        const graderToken = graderTokenResponse.request.response.replaceAll('"', '');
+
         setApiToken(apiToken);
         setUser(user);
+        setGraderToken(graderToken);
         localStorage.setItem('apiToken', apiToken);
         localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('graderToken', graderToken);
         navigate('/courses');
     };
 

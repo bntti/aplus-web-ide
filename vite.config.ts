@@ -10,6 +10,13 @@ export default defineConfig({
                 target: 'http://localhost:8000',
                 changeOrigin: true,
             },
+            '/grader': {
+                target: 'http://localhost:8080',
+                changeOrigin: true,
+                rewrite: (path) => {
+                    return path.replace(/^\/grader/, '');
+                },
+            },
         },
     },
 });

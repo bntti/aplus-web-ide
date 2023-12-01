@@ -2,7 +2,7 @@ import { Typography } from '@mui/material';
 import { useContext, useEffect } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
 
-import { ApiTokenContext, UserContext } from './StateProvider';
+import { ApiTokenContext, GraderTokenContext, UserContext } from './StateProvider';
 import Root from '../components/Root';
 import Course from '../routes/Course';
 import Courses from '../routes/Courses';
@@ -13,19 +13,33 @@ import Submission from '../routes/Submission';
 const RequireAuth = ({ children }: { children: JSX.Element }): JSX.Element => {
     const { apiToken, setApiToken } = useContext(ApiTokenContext);
     const { user, setUser } = useContext(UserContext);
+    const { graderToken, setGraderToken } = useContext(GraderTokenContext);
 
     const storageApiToken = localStorage.getItem('apiToken');
     const storageUser = localStorage.getItem('user');
+    const storageGraderToken = localStorage.getItem('graderToken');
 
     useEffect(() => {
+        if (apiToken && user && graderToken) return; // Race condition? (shouldn't be a problem)
         if (storageApiToken && storageUser) {
             setApiToken(storageApiToken);
             setUser(JSON.parse(storageUser));
+            setGraderToken(storageGraderToken);
         }
-    }, [storageApiToken, storageUser, setApiToken, setUser]);
+    }, [
+        apiToken,
+        user,
+        graderToken,
+        storageApiToken,
+        storageUser,
+        storageGraderToken,
+        setApiToken,
+        setUser,
+        setGraderToken,
+    ]);
 
-    if (apiToken && user) return children;
-    if (storageApiToken && storageUser) return <Typography>Loading</Typography>;
+    if (apiToken && user && graderToken) return children;
+    if (storageApiToken && storageUser && storageGraderToken) return <Typography>Loading</Typography>;
 
     return <Navigate replace to="/login" state={{ from: location.pathname }} />;
 };

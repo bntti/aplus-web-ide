@@ -35,6 +35,7 @@ export const ExerciseSchema = z.object({
             form_i18n: z.record(z.string(), z.object({ en: z.string().optional(), fi: z.string() }).partial()),
         })
         .nullable(),
+    templates: z.union([z.literal(''), z.string().url()]),
 });
 const ExerciseWithInfoSchema = ExerciseSchema.extend({
     exercise_info: z.object({

@@ -22,15 +22,6 @@ import { useContext, useState } from 'react';
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseWithInfo, FileSpec } from '../routes/exerciseTypes';
 
-type Props =
-    | {
-          exercise: ExerciseWithInfo;
-          callback: () => void;
-          codes?: null;
-          readOnly?: false;
-      }
-    | { exercise: ExerciseWithInfo; callback?: null; codes: string[]; readOnly: true };
-
 const guessLanguages = (portions: FileSpec[]): string[] => {
     return portions.map((portion) => {
         if (portion.title.endsWith('.js')) return 'javascript';
@@ -39,6 +30,15 @@ const guessLanguages = (portions: FileSpec[]): string[] => {
         return 'text';
     });
 };
+
+type Props =
+    | {
+          exercise: ExerciseWithInfo;
+          callback: () => void;
+          codes?: null | string[];
+          readOnly?: false;
+      }
+    | { exercise: ExerciseWithInfo; callback?: null; codes: string[]; readOnly: true };
 
 const CodeEditor = ({
     exercise,
@@ -55,7 +55,10 @@ const CodeEditor = ({
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
     const storageCodes = [];
     for (let i = 0; i < portions.length; i++) {
-        storageCodes.push(localStorage.getItem(`${exercise.id}.${i}`) ?? '');
+        const storageCode = localStorage.getItem(`${exercise.id}.${i}`);
+        if (storageCode) storageCodes.push(storageCode);
+        else if (defaultCodes) storageCodes.push(defaultCodes[i]);
+        else storageCodes.push('');
     }
 
     // @ts-expect-error defaultCodes cannot be null if readOnly is true

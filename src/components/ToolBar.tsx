@@ -5,7 +5,7 @@ import { AppBar, Button, IconButton, Toolbar, Typography, useTheme } from '@mui/
 import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { ApiTokenContext, LanguageContext, ThemeContext, UserContext } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, LanguageContext, ThemeContext, UserContext } from '../app/StateProvider';
 
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
@@ -13,6 +13,7 @@ const ToolBar = (): JSX.Element => {
     const { colorMode } = useContext(ThemeContext);
     const { apiToken, setApiToken } = useContext(ApiTokenContext);
     const { user, setUser } = useContext(UserContext);
+    const { setGraderToken } = useContext(GraderTokenContext);
     const { language, setLanguage } = useContext(LanguageContext);
 
     return (
@@ -51,8 +52,10 @@ const ToolBar = (): JSX.Element => {
                             onClick={() => {
                                 setApiToken(null);
                                 setUser(null);
+                                setGraderToken(null);
                                 localStorage.removeItem('apiToken');
                                 localStorage.removeItem('user');
+                                localStorage.removeItem('graderToken');
                                 navigate('/login');
                             }}
                             size="large"

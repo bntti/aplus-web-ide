@@ -33,6 +33,14 @@ type User = z.infer<typeof UserSchema> | null;
 type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
 export const UserContext = createContext<UserContextT>({} as UserContextT);
 
+// GraderToken
+type GraderToken = string | null;
+type GraderTokenContextT = {
+    graderToken: GraderToken;
+    setGraderToken: React.Dispatch<React.SetStateAction<GraderToken>>;
+};
+export const GraderTokenContext = createContext<GraderTokenContextT>({} as GraderTokenContextT);
+
 // Theme
 type ThemeContextT = { colorMode: { toggleTheme: () => void } };
 export const ThemeContext = createContext<ThemeContextT>({} as ThemeContextT);
@@ -41,10 +49,15 @@ export const GlobalStateProvider = ({ children }: { children: React.ReactNode })
     const [apiToken, setApiToken] = useState<ApiToken>(null);
     const [language, setLanguage] = useState<Language>('english');
     const [user, setUser] = useState<User>(null);
+    const [graderToken, setGraderToken] = useState<GraderToken>(null);
     return (
         <ApiTokenContext.Provider value={{ apiToken, setApiToken }}>
             <LanguageContext.Provider value={{ language, setLanguage }}>
-                <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
+                <UserContext.Provider value={{ user, setUser }}>
+                    <GraderTokenContext.Provider value={{ graderToken, setGraderToken }}>
+                        {children}
+                    </GraderTokenContext.Provider>
+                </UserContext.Provider>
             </LanguageContext.Provider>
         </ApiTokenContext.Provider>
     );

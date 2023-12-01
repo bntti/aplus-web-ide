@@ -22,7 +22,7 @@ import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-route
 import { z } from 'zod';
 
 import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
-import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, LanguageContext } from '../app/StateProvider';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import TabPanel from '../components/TabPanel';
@@ -56,11 +56,13 @@ const Exercise = (): JSX.Element => {
     const { state } = useLocation();
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
+    const { graderToken } = useContext(GraderTokenContext);
     const { language } = useContext(LanguageContext);
     const navigate = useNavigate();
     const theme = useTheme();
 
     const [exercise, setExercise] = useState<ExerciseT | null>(null);
+    const [templates, setTemplates] = useState<string[] | null>(null);
     const [submitterStats, setSubmitterStats] = useState<SubmitterStats | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
@@ -82,11 +84,22 @@ const Exercise = (): JSX.Element => {
             const exerciseResponse = await axios.get(`/api/v2/exercises/${exerciseId}`, {
                 headers: { Authorization: `Token ${apiToken}` },
             });
-            setExercise(ExerciseSchema.parse(exerciseResponse.data));
+            const newExercise = ExerciseSchema.parse(exerciseResponse.data);
+
+            setExercise(newExercise);
             await getSubmissions();
+
+            if (newExercise.templates) {
+                // TODO: handle multiple templates
+                const templateResponse = await axios.get(
+                    newExercise.templates.replace('http://grader:8080', '/grader'), // TODO: change in prod?
+                    { headers: { Authorization: `Bearer ${graderToken}` } },
+                );
+                setTemplates([templateResponse.data]);
+            }
         };
         getData().catch(console.error);
-    }, [apiToken, exerciseId, getSubmissions]);
+    }, [apiToken, graderToken, exerciseId, getSubmissions]);
 
     useEffect(() => {
         if (state && state.showSubmissions && activeIndex !== 1) {
@@ -113,7 +126,12 @@ const Exercise = (): JSX.Element => {
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
     if (exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
-    if (exercise === null || submitterStats === null || submissions === null)
+    if (
+        exercise === null ||
+        submitterStats === null ||
+        submissions === null ||
+        (exercise.templates && templates === null)
+    )
         return <Typography>Loading exercise...</Typography>;
 
     return (
@@ -170,7 +188,7 @@ const Exercise = (): JSX.Element => {
                 ) : numSubmissions >= exercise.max_submissions ? (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
-                    <CodeEditor callback={callback} exercise={exercise as ExerciseWithInfo} />
+                    <CodeEditor callback={callback} exercise={exercise as ExerciseWithInfo} codes={templates} />
                 ) : (
                     <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
                 )}
