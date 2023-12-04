@@ -1,9 +1,9 @@
 import { Button, Container, Paper, TextField, Typography } from '@mui/material';
-import axios from 'axios';
 import { useContext, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { ApiTokenContext, GraderTokenContext, UserContext, UserSchema } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
+import { getGraderToken, getUser } from '../app/api/login';
 
 const Login = (): JSX.Element => {
     const { setApiToken } = useContext(ApiTokenContext);
@@ -15,23 +15,8 @@ const Login = (): JSX.Element => {
     const [newApiToken, setNewApiToken] = useState('');
 
     const loadUser = async (apiToken: string): Promise<void> => {
-        const userResponse = await axios
-            .get('/api/v2/users/me', { headers: { Authorization: `Token ${apiToken}` } })
-            .catch((error) => {
-                throw error;
-            });
-        const user = UserSchema.parse(userResponse.data);
-
-        const graderTokenResponse = await axios.post(
-            '/api/v2/get-token',
-            {
-                taud: 'grader',
-                exp: '01:00:00',
-                permissions: user.enrolled_courses.map((course) => ['exercise', 1, { id: course.id }]),
-            },
-            { headers: { Authorization: `Token ${apiToken}` } },
-        );
-        const graderToken = graderTokenResponse.request.response.replaceAll('"', '');
+        const user = await getUser(apiToken);
+        const graderToken = await getGraderToken(apiToken, user.enrolled_courses);
 
         setApiToken(apiToken);
         setUser(user);

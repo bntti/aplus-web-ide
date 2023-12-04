@@ -15,78 +15,30 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { z } from 'zod';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
-
-const CourseSchema = z.object({
-    id: z.number().int().nonnegative(),
-    name: z.string(),
-});
-type CourseT = z.infer<typeof CourseSchema>;
-
-const CoursePointsSchema = z.object({
-    points: z.number().int().nonnegative(),
-    modules: z.array(
-        z.object({
-            name: z.string(),
-            max_points: z.number().int().nonnegative(),
-            points_to_pass: z.number().int().nonnegative(),
-            submission_count: z.number().int().nonnegative(),
-            points: z.number().int().nonnegative(),
-            passed: z.boolean(),
-            exercises: z.array(
-                z.object({
-                    id: z.number().int().nonnegative(),
-                    name: z.string(),
-                    max_points: z.number().int().nonnegative(),
-                    points_to_pass: z.number().int().nonnegative(),
-                    submission_count: z.number().int().nonnegative(),
-                    points: z.number().int().nonnegative(),
-                    passed: z.boolean(),
-                }),
-            ),
-        }),
-    ),
-});
-type CoursePoints = z.infer<typeof CoursePointsSchema>;
-
-// TODO: Has fields next and previous, might be necessary on bigger courses?
-const ExercisesSchema = z.object({
-    results: z.array(
-        z.object({
-            exercises: z.array(
-                z.object({ id: z.number().int().nonnegative(), max_submissions: z.number().int().nonnegative() }),
-            ),
-        }),
-    ),
-});
+import { CourseData, CoursePoints, getCourse, getCoursePoints, getExercises } from '../app/api/course';
 
 const Course = (): JSX.Element => {
     const { courseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
     const theme = useTheme();
+    const navigate = useNavigate();
 
-    const [course, setCourse] = useState<CourseT | null>(null);
+    const [course, setCourse] = useState<CourseData | null>(null);
     const [coursePoints, setCoursePoints] = useState<CoursePoints | null>(null);
     const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            const courseResponse = await axios.get(`/api/v2/courses/${courseId}`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
+            if (apiToken === null || courseId === undefined) return;
+            setCourse(await getCourse(apiToken, courseId, navigate));
+            setCoursePoints(await getCoursePoints(apiToken, courseId, navigate));
 
-            setCourse(CourseSchema.parse(courseResponse.data));
-
-            const exerciseResponse = await axios.get(`/api/v2/courses/${courseId}/exercises`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
-            const exercises = ExercisesSchema.parse(exerciseResponse.data);
+            const exercises = await getExercises(apiToken, courseId, navigate);
             const maxSubmissions: { [key: number]: number } = {};
             for (const result of exercises.results) {
                 for (const exercise of result.exercises) {
@@ -94,14 +46,9 @@ const Course = (): JSX.Element => {
                 }
             }
             setExerciseMaxSubmissions(maxSubmissions);
-
-            const pointsResponse = await axios.get(`/api/v2/courses/${courseId}/points/me`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
-            setCoursePoints(CoursePointsSchema.parse(pointsResponse.data));
         };
         getData().catch(console.error);
-    }, [apiToken, courseId]);
+    }, [apiToken, courseId, navigate]);
 
     const parseName = (name: string): string => {
         const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;

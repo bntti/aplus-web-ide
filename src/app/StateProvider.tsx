@@ -2,20 +2,21 @@ import { useState, createContext } from 'react';
 import { z } from 'zod';
 
 // Api token
-type ApiToken = string | null;
-type ApiTokenContextT = {
+export type ApiTokenN = string;
+export type ApiToken = ApiTokenN | null;
+type ApiTokenContext = {
     apiToken: ApiToken;
     setApiToken: React.Dispatch<React.SetStateAction<ApiToken>>;
 };
-export const ApiTokenContext = createContext<ApiTokenContextT>({} as ApiTokenContextT);
+export const ApiTokenContext = createContext<ApiTokenContext>({} as ApiTokenContext);
 
 // Language
 type Language = 'finnish' | 'english';
-type LanguageContextT = {
+type LanguageContext = {
     language: Language;
     setLanguage: React.Dispatch<React.SetStateAction<Language>>;
 };
-export const LanguageContext = createContext<LanguageContextT>({} as LanguageContextT);
+export const LanguageContext = createContext<LanguageContext>({} as LanguageContext);
 
 // User
 export const UserSchema = z.object({
@@ -29,21 +30,23 @@ export const UserSchema = z.object({
         }),
     ),
 });
-type User = z.infer<typeof UserSchema> | null;
-type UserContextT = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
-export const UserContext = createContext<UserContextT>({} as UserContextT);
+export type UserN = z.infer<typeof UserSchema>;
+export type User = UserN | null;
+type UserContext = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
+export const UserContext = createContext<UserContext>({} as UserContext);
 
 // GraderToken
-type GraderToken = string | null;
-type GraderTokenContextT = {
+export type GraderTokenN = string;
+export type GraderToken = GraderTokenN | null;
+type GraderTokenContext = {
     graderToken: GraderToken;
     setGraderToken: React.Dispatch<React.SetStateAction<GraderToken>>;
 };
-export const GraderTokenContext = createContext<GraderTokenContextT>({} as GraderTokenContextT);
+export const GraderTokenContext = createContext<GraderTokenContext>({} as GraderTokenContext);
 
 // Theme
-type ThemeContextT = { colorMode: { toggleTheme: () => void } };
-export const ThemeContext = createContext<ThemeContextT>({} as ThemeContextT);
+type ThemeContext = { colorMode: { toggleTheme: () => void } };
+export const ThemeContext = createContext<ThemeContext>({} as ThemeContext);
 
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const [apiToken, setApiToken] = useState<ApiToken>(null);

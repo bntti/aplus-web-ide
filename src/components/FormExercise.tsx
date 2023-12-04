@@ -20,17 +20,17 @@ import { LanguageContext } from '../app/StateProvider';
 import {
     CheckboxSpec,
     DropdownSpec,
-    ExerciseWithInfo,
+    ExerciseDataWithInfo,
     FormSpec,
     RadioSpec,
     StaticSpec,
     TextSpec,
-} from '../routes/exerciseTypes';
+} from '../app/api/exerciseTypes';
 
-type Props = { exercise: ExerciseWithInfo; apiToken: string; callback: () => void };
+type Props = { exercise: ExerciseDataWithInfo; apiToken: string; callback: () => void };
 type CheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
 
-const getDefaultFormValues = (exercise: ExerciseWithInfo): { [key: string]: string } => {
+const getDefaultFormValues = (exercise: ExerciseDataWithInfo): { [key: string]: string } => {
     const defaultFormValues: { [key: string]: string } = {};
     for (const portion of exercise.exercise_info.form_spec) {
         if (portion.type === 'dropdown' || portion.type === 'radio') {
@@ -40,7 +40,7 @@ const getDefaultFormValues = (exercise: ExerciseWithInfo): { [key: string]: stri
     return defaultFormValues;
 };
 
-const getDefaultCheckboxValues = (exercise: ExerciseWithInfo): CheckBoxValues => {
+const getDefaultCheckboxValues = (exercise: ExerciseDataWithInfo): CheckBoxValues => {
     const defaultFormCheckboxValues: CheckBoxValues = {};
     for (const portion of exercise.exercise_info.form_spec) {
         if (portion.type === 'checkbox') {

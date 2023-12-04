@@ -16,41 +16,22 @@ import {
     Typography,
     useTheme,
 } from '@mui/material';
-import axios from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { z } from 'zod';
 
-import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import { ApiTokenContext, GraderTokenContext, LanguageContext } from '../app/StateProvider';
+import {
+    Submissions,
+    SubmitterStats,
+    getExercise,
+    getSubmissions,
+    getSubmitterStats,
+    getTemplates,
+} from '../app/api/exercise';
+import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import TabPanel from '../components/TabPanel';
-
-const SubmitterStatsSchema = z.object({
-    submissions_with_points: z.array(
-        z.object({
-            id: z.number().int().nonnegative(),
-            submission_time: z.string().datetime({ precision: 6 }).pipe(z.coerce.date()),
-            grade: z.number().int().nonnegative(),
-        }),
-    ),
-    points_to_pass: z.number().int().nonnegative(),
-    points: z.number().int().nonnegative(),
-    passed: z.boolean(),
-});
-type SubmitterStats = z.infer<typeof SubmitterStatsSchema>;
-
-const SubmissionsSchema = z.object({
-    results: z.array(
-        z.object({
-            id: z.number().int().nonnegative(),
-            grade: z.number().int().nonnegative(),
-            submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
-        }),
-    ),
-});
-type Submissions = z.infer<typeof SubmissionsSchema>;
 
 const Exercise = (): JSX.Element => {
     const { state } = useLocation();
@@ -61,53 +42,41 @@ const Exercise = (): JSX.Element => {
     const navigate = useNavigate();
     const theme = useTheme();
 
-    const [exercise, setExercise] = useState<ExerciseT | null>(null);
+    const [exercise, setExercise] = useState<ExerciseData | null>(null);
     const [templates, setTemplates] = useState<string[] | null>(null);
     const [submitterStats, setSubmitterStats] = useState<SubmitterStats | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
-    const getSubmissions = useCallback(async (): Promise<void> => {
-        const submitterStatsResponse = await axios.get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
-            headers: { Authorization: `Token ${apiToken}` },
-        });
-        setSubmitterStats(SubmitterStatsSchema.parse(submitterStatsResponse.data));
-
-        const submissionsResponse = await axios.get(`/api/v2/exercises/${exerciseId}/submissions/me`, {
-            headers: { Authorization: `Token ${apiToken}` },
-        });
-        setSubmissions(SubmissionsSchema.parse(submissionsResponse.data));
-    }, [apiToken, exerciseId]);
+    const getSubmissionsData = useCallback(async (): Promise<void> => {
+        if (apiToken === null || exerciseId === undefined) return;
+        setSubmitterStats(await getSubmitterStats(apiToken, exerciseId, navigate));
+        setSubmissions(await getSubmissions(apiToken, exerciseId, navigate));
+    }, [apiToken, exerciseId, navigate]);
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            const exerciseResponse = await axios.get(`/api/v2/exercises/${exerciseId}`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
-            const newExercise = ExerciseSchema.parse(exerciseResponse.data);
-
+            if (apiToken === null || exerciseId === undefined) return;
+            const newExercise = await getExercise(apiToken, exerciseId, navigate);
             setExercise(newExercise);
-            await getSubmissions();
+
+            await getSubmissionsData();
 
             if (newExercise.templates && newExercise.exercise_info) {
                 const templateNames = newExercise.templates.split(' ');
-                const newTemplates = [];
-                for (const template of templateNames) {
-                    const templateResponse = await axios.get(
-                        template.replace('http://grader:8080', '/grader'), // TODO: change in prod?
-                        { headers: { Authorization: `Bearer ${graderToken}` } },
-                    );
-                    newTemplates.push(templateResponse.data);
-                }
+                const newTemplates = await getTemplates(graderToken, templateNames).catch(() => {
+                    navigate('/login'); // TODO: handle logout properly.
+                    throw new Error('Failed to get templates, most likely a bad grader api key');
+                });
+
                 if (newTemplates.length !== newExercise.exercise_info.form_spec.length) {
                     throw new Error('There are missing templates'); // Assuming only file portions
                 }
-                // Assumes correct order of templates
-                setTemplates(newTemplates);
+                setTemplates(newTemplates); // Assumes correct order of templates
             }
         };
         getData().catch(console.error);
-    }, [apiToken, graderToken, exerciseId, getSubmissions]);
+    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData]);
 
     useEffect(() => {
         if (state && state.showSubmissions && activeIndex !== 1) {
@@ -117,7 +86,7 @@ const Exercise = (): JSX.Element => {
     }, [state, activeIndex]);
 
     const callback = (): void => {
-        getSubmissions().catch(console.error);
+        getSubmissionsData().catch(console.error);
         setActiveIndex(1);
     };
 
@@ -197,15 +166,15 @@ const Exercise = (): JSX.Element => {
                 ) : numSubmissions >= exercise.max_submissions ? (
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
-                    <CodeEditor callback={callback} exercise={exercise as ExerciseWithInfo} codes={templates} />
+                    <CodeEditor callback={callback} exercise={exercise as ExerciseDataWithInfo} codes={templates} />
                 ) : (
-                    <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
+                    <FormExercise exercise={exercise as ExerciseDataWithInfo} apiToken={apiToken} callback={callback} />
                 )}
             </TabPanel>
 
             {templates !== null && (
                 <TabPanel value={activeIndex} index={2}>
-                    <CodeEditor exercise={exercise as ExerciseWithInfo} codes={templates} readOnly />
+                    <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={templates} readOnly />
                 </TabPanel>
             )}
 

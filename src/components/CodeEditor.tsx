@@ -20,7 +20,7 @@ import axios from 'axios';
 import { useContext, useState } from 'react';
 
 import { ApiTokenContext } from '../app/StateProvider';
-import { ExerciseWithInfo, FileSpec } from '../routes/exerciseTypes';
+import { ExerciseDataWithInfo, FileSpec } from '../app/api/exerciseTypes';
 
 const guessLanguages = (portions: FileSpec[]): string[] => {
     return portions.map((portion) => {
@@ -33,12 +33,12 @@ const guessLanguages = (portions: FileSpec[]): string[] => {
 
 type Props =
     | {
-          exercise: ExerciseWithInfo;
+          exercise: ExerciseDataWithInfo;
           callback: () => void;
           codes?: null | string[];
           readOnly?: false;
       }
-    | { exercise: ExerciseWithInfo; callback?: null; codes: string[]; readOnly: true };
+    | { exercise: ExerciseDataWithInfo; callback?: null; codes: string[]; readOnly: true };
 
 const CodeEditor = ({
     exercise,

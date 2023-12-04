@@ -22,7 +22,7 @@ const FileSchema = z.object({ type: z.literal('file'), key: z.string(), title: z
 const StaticSchema = z.object({ type: z.literal('static'), key: z.string(), description: z.string().optional() });
 const GeneralSchema = z.union([RadioSchema, DropdownSchema, CheckboxSchema, TextSchema, FileSchema, StaticSchema]);
 
-export const ExerciseSchema = z.object({
+export const ExerciseDataSchema = z.object({
     id: z.number().int().nonnegative(),
     display_name: z.string(),
     is_submittable: z.boolean(), // What even is this value?
@@ -37,7 +37,7 @@ export const ExerciseSchema = z.object({
         .nullable(),
     templates: z.union([z.literal(''), z.string().url()]),
 });
-const ExerciseWithInfoSchema = ExerciseSchema.extend({
+const ExerciseDataWithInfoSchema = ExerciseDataSchema.extend({
     exercise_info: z.object({
         form_spec: z.array(GeneralSchema),
         form_i18n: z.record(z.string(), z.object({ en: z.string(), fi: z.string() })),
@@ -54,5 +54,5 @@ export type FileSpec = z.infer<typeof FileSchema>;
 export type StaticSpec = z.infer<typeof StaticSchema>;
 export type GeneralSpec = z.infer<typeof GeneralSchema>;
 
-export type ExerciseT = z.infer<typeof ExerciseSchema>;
-export type ExerciseWithInfo = z.infer<typeof ExerciseWithInfoSchema>;
+export type ExerciseData = z.infer<typeof ExerciseDataSchema>;
+export type ExerciseDataWithInfo = z.infer<typeof ExerciseDataWithInfoSchema>;

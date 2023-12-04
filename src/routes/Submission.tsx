@@ -1,70 +1,39 @@
 import { Box, Button, Chip, Container, Paper, Stack, Tab, Tabs, Typography, useTheme } from '@mui/material';
-import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { z } from 'zod';
 
-import { ExerciseSchema, ExerciseT, ExerciseWithInfo } from './exerciseTypes';
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
+import { getExercise } from '../app/api/exercise';
+import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
+import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
 import CodeEditor from '../components/CodeEditor';
 import TabPanel from '../components/TabPanel';
 
-const SubmissionSchema = z.object({
-    id: z.number().int().nonnegative(),
-    submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
-    grade: z.number().int().nonnegative(),
-    exercise: z.object({
-        id: z.number().int().nonnegative(),
-        display_name: z.string(),
-        max_points: z.number().int().nonnegative(),
-    }),
-    files: z.array(z.object({ id: z.number().int().nonnegative() })),
-    status: z.string(),
-    feedback: z.string(),
-});
-type SubmissionT = z.infer<typeof SubmissionSchema>;
-
 const Submission = (): JSX.Element => {
-    const currentTheme = useTheme();
-    const navigate = useNavigate();
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
+    const currentTheme = useTheme();
+    const navigate = useNavigate();
 
     const [codes, setCodes] = useState<string[] | null>(null);
-    const [exercise, setExercise] = useState<ExerciseT | null>(null);
-    const [submission, setSubmission] = useState<SubmissionT | null>(null);
+    const [exercise, setExercise] = useState<ExerciseData | null>(null);
+    const [submission, setSubmission] = useState<SubmissionData | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            const submissionResponse = await axios.get(`/api/v2/submissions/${submissionId}`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
-            const newSubmission = SubmissionSchema.parse(submissionResponse.data);
+            if (apiToken === null || submissionId === undefined) return;
+            const newSubmission = await getSubmission(apiToken, submissionId, navigate);
             setSubmission(newSubmission);
 
-            if (newSubmission.files.length === 0) return;
-            const exerciseResponse = await axios.get(`/api/v2/exercises/${newSubmission.exercise.id}`, {
-                headers: { Authorization: `Token ${apiToken}` },
-            });
-            setExercise(ExerciseSchema.parse(exerciseResponse.data));
-
-            const newCodes = [];
-            for (let i = 0; i < newSubmission.files.length; i++) {
-                const codeResponse = await axios.get(
-                    `/api/v2/submissions/${submissionId}/files/${newSubmission.files[i].id}`,
-                    {
-                        headers: { Authorization: `Token ${apiToken}` },
-                    },
-                );
-                newCodes.push(codeResponse.data);
-            }
-            setCodes(newCodes);
+            if (newSubmission.files.length === 0) return; // Return if is not submission exercise
+            setExercise(await getExercise(apiToken, newSubmission.exercise.id, navigate));
+            setCodes(await getSubmissionFiles(apiToken, submissionId, newSubmission.files, navigate));
         };
 
         getData().catch(console.error);
-    }, [apiToken, submissionId]);
+    }, [apiToken, submissionId, navigate]);
 
     const parseName = (name: string): string => {
         const regexp = /([^|]*)\|en:([^|]*)\|fi:([^|]*)\|/;
@@ -131,7 +100,7 @@ const Submission = (): JSX.Element => {
                         {codes === null ? (
                             <Typography>Loading code...</Typography>
                         ) : (
-                            <CodeEditor exercise={exercise as ExerciseWithInfo} codes={codes} readOnly />
+                            <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={codes} readOnly />
                         )}
                     </TabPanel>
                 </>
