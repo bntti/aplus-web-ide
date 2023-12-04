@@ -186,7 +186,8 @@ const Exercise = (): JSX.Element => {
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
                     <Tab label="Edit code" />
-                    <Tab label="Submissions" />
+                    {templates !== null && <Tab value={2} label="Show templates" />}
+                    <Tab value={1} label="Submissions" />
                 </Tabs>
             </Box>
 
@@ -201,6 +202,12 @@ const Exercise = (): JSX.Element => {
                     <FormExercise exercise={exercise as ExerciseWithInfo} apiToken={apiToken} callback={callback} />
                 )}
             </TabPanel>
+
+            {templates !== null && (
+                <TabPanel value={activeIndex} index={2}>
+                    <CodeEditor exercise={exercise as ExerciseWithInfo} codes={templates} readOnly />
+                </TabPanel>
+            )}
 
             <TabPanel value={activeIndex} index={1}>
                 {submitterStats.submissions_with_points.length === 0 ? (
