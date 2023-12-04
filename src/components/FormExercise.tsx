@@ -211,9 +211,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
     };
 
     useEffect(() => {
-        // @ts-expect-error Mathjax
-        if (typeof window?.MathJax !== 'undefined') {
-            // @ts-expect-error Mathjax
+        if (window?.MathJax !== undefined) {
             window.MathJax.typeset();
         }
     });

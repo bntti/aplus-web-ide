@@ -1,6 +1,6 @@
 import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
-import { StreamLanguage } from '@codemirror/language';
+import { LanguageSupport, StreamLanguage } from '@codemirror/language';
 import { scala } from '@codemirror/legacy-modes/mode/clike';
 import {
     Button,
@@ -80,8 +80,7 @@ const CodeEditor = ({
             .catch(console.error);
     };
 
-    // eslint-disable-next-line
-    const getLanguage = (language: string): any[] => {
+    const getLanguage = (language: string): (LanguageSupport | StreamLanguage<unknown>)[] => {
         if (language === 'javascript') return [javascript()];
         else if (language === 'python') return [python()];
         else if (language === 'scala') return [StreamLanguage.define(scala)];

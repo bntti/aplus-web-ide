@@ -10,6 +10,14 @@ import Exercise from '../routes/Exercise';
 import Login from '../routes/Login';
 import Submission from '../routes/Submission';
 
+declare global {
+    interface Window {
+        MathJax?: {
+            typeset: () => void;
+        };
+    }
+}
+
 const RequireAuth = ({ children }: { children: JSX.Element }): JSX.Element => {
     const { apiToken, setApiToken } = useContext(ApiTokenContext);
     const { user, setUser } = useContext(UserContext);
@@ -21,7 +29,7 @@ const RequireAuth = ({ children }: { children: JSX.Element }): JSX.Element => {
 
     useEffect(() => {
         if (apiToken && user && graderToken) return; // Race condition? (shouldn't be a problem)
-        if (storageApiToken && storageUser) {
+        if (storageApiToken && storageUser && storageGraderToken) {
             setApiToken(storageApiToken);
             setUser(JSON.parse(storageUser));
             setGraderToken(storageGraderToken);
