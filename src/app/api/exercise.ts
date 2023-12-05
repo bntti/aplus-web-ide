@@ -31,11 +31,9 @@ const SubmissionsSchema = z.object({
 });
 export type Submissions = z.infer<typeof SubmissionsSchema>;
 
-export const getSubmitterStats = async (
-    apiToken: ApiTokenN,
-    exerciseId: string | number,
-    navigate: NavigateFunction,
-): Promise<SubmitterStats | never> => {
+type ExerciseFunction<T> = (apiToken: ApiTokenN, exerciseId: string | number, navigate: NavigateFunction) => Promise<T>;
+
+export const getSubmitterStats: ExerciseFunction<SubmitterStats> = async (apiToken, exerciseId, navigate) => {
     const submitterStatsResponse = await axios
         .get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -44,11 +42,7 @@ export const getSubmitterStats = async (
     return SubmitterStatsSchema.parse(submitterStatsResponse.data);
 };
 
-export const getSubmissions = async (
-    apiToken: ApiTokenN,
-    exerciseId: string | number,
-    navigate: NavigateFunction,
-): Promise<Submissions | never> => {
+export const getSubmissions: ExerciseFunction<Submissions> = async (apiToken, exerciseId, navigate) => {
     const submissionsResponse = await axios
         .get(`/api/v2/exercises/${exerciseId}/submissions/me`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -57,11 +51,7 @@ export const getSubmissions = async (
     return SubmissionsSchema.parse(submissionsResponse.data);
 };
 
-export const getExercise = async (
-    apiToken: ApiTokenN,
-    exerciseId: string | number,
-    navigate: NavigateFunction,
-): Promise<ExerciseData | never> => {
+export const getExercise: ExerciseFunction<ExerciseData> = async (apiToken, exerciseId, navigate) => {
     const exerciseResponse = await axios
         .get(`/api/v2/exercises/${exerciseId}`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -71,7 +61,7 @@ export const getExercise = async (
     return ExerciseDataSchema.parse(exerciseResponse.data);
 };
 
-export const getTemplates = async (graderToken: GraderToken, templateNames: string[]): Promise<string[] | never> => {
+export const getTemplates = async (graderToken: GraderToken, templateNames: string[]): Promise<string[]> => {
     if (!graderToken) throw new Error('Invalid courseId / apiToken');
 
     const templates = [];

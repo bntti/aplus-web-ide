@@ -1,11 +1,12 @@
 import { Button, Container, Paper, TextField, Typography } from '@mui/material';
 import { useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 import { getGraderToken, getUser } from '../app/api/login';
 
 const Login = (): JSX.Element => {
+    const { state } = useLocation();
     const { setApiToken } = useContext(ApiTokenContext);
     const { setUser } = useContext(UserContext);
     const { setGraderToken } = useContext(GraderTokenContext);
@@ -24,7 +25,8 @@ const Login = (): JSX.Element => {
         localStorage.setItem('apiToken', apiToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('graderToken', graderToken);
-        navigate('/courses');
+        if (state.from) navigate(state.from);
+        else navigate('/');
     };
 
     const addApiToken = (event: React.SyntheticEvent): void => {

@@ -65,7 +65,7 @@ const Exercise = (): JSX.Element => {
             if (newExercise.templates && newExercise.exercise_info) {
                 const templateNames = newExercise.templates.split(' ');
                 const newTemplates = await getTemplates(graderToken, templateNames).catch(() => {
-                    navigate('/login'); // TODO: handle logout properly.
+                    navigate('/logout');
                     throw new Error('Failed to get templates, most likely a bad grader api key');
                 });
 
@@ -134,7 +134,7 @@ const Exercise = (): JSX.Element => {
                 )}
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
-                <Button variant="outlined" size="small" onClick={() => navigate(`/course/${exercise.course.id}`)}>
+                <Button variant="outlined" size="small" component={Link} to={`/course/${exercise.course.id}`}>
                     Back to course
                 </Button>
                 <Chip

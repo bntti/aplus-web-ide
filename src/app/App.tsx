@@ -8,6 +8,7 @@ import Course from '../routes/Course';
 import Courses from '../routes/Courses';
 import Exercise from '../routes/Exercise';
 import Login from '../routes/Login';
+import Logout from '../routes/Logout';
 import Submission from '../routes/Submission';
 
 declare global {
@@ -62,7 +63,7 @@ const router = createBrowserRouter([
                 loader: () => redirect('/courses'),
             },
             { path: 'login', element: <Login /> },
-
+            { path: 'logout', element: <Logout /> },
             {
                 path: 'courses',
                 element: (

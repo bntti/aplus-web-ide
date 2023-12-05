@@ -24,7 +24,7 @@ export const getSubmission = async (
     apiToken: ApiTokenN,
     submissionId: string | number,
     navigate: NavigateFunction,
-): Promise<SubmissionData | never> => {
+): Promise<SubmissionData> => {
     const submissionResponse = await axios
         .get(`/api/v2/submissions/${submissionId}`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -38,7 +38,7 @@ export const getSubmissionFiles = async (
     submissionId: string | number,
     files: { id: number }[],
     navigate: NavigateFunction,
-): Promise<string[] | never> => {
+): Promise<string[]> => {
     const newCodes = [];
     for (let i = 0; i < files.length; i++) {
         const codeResponse = await axios

@@ -47,14 +47,11 @@ const ExercisesSchema = z.object({
         }),
     ),
 });
-
 type Exercises = z.infer<typeof ExercisesSchema>;
 
-export const getCourse = async (
-    apiToken: ApiTokenN,
-    courseId: string | number,
-    navigate: NavigateFunction,
-): Promise<CourseData | never> => {
+type CourseFunction<T> = (apiToken: ApiTokenN, courseId: string | number, navigate: NavigateFunction) => Promise<T>;
+
+export const getCourse: CourseFunction<CourseData> = async (apiToken, courseId, navigate) => {
     const courseResponse = await axios
         .get(`/api/v2/courses/${courseId}`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -64,11 +61,7 @@ export const getCourse = async (
     return CourseDataSchema.parse(courseResponse.data);
 };
 
-export const getExercises = async (
-    apiToken: ApiTokenN,
-    courseId: string | number,
-    navigate: NavigateFunction,
-): Promise<Exercises | never> => {
+export const getExercises: CourseFunction<Exercises> = async (apiToken, courseId, navigate) => {
     const exerciseResponse = await axios
         .get(`/api/v2/courses/${courseId}/exercises`, {
             headers: { Authorization: `Token ${apiToken}` },
@@ -78,11 +71,7 @@ export const getExercises = async (
     return ExercisesSchema.parse(exerciseResponse.data);
 };
 
-export const getCoursePoints = async (
-    apiToken: ApiTokenN,
-    courseId: string | number,
-    navigate: NavigateFunction,
-): Promise<CoursePoints | never> => {
+export const getCoursePoints: CourseFunction<CoursePoints> = async (apiToken, courseId, navigate) => {
     const pointsResponse = await axios
         .get(`/api/v2/courses/${courseId}/points/me`, {
             headers: { Authorization: `Token ${apiToken}` },
