@@ -25,14 +25,18 @@ const Login = (): JSX.Element => {
         localStorage.setItem('apiToken', apiToken);
         localStorage.setItem('user', JSON.stringify(user));
         localStorage.setItem('graderToken', graderToken);
-        if (state.from) navigate(state.from);
+        if (state && state.from) navigate(state.from);
         else navigate('/');
     };
 
     const addApiToken = (event: React.SyntheticEvent): void => {
         event.preventDefault();
-        loadUser(newApiToken).catch(() => {
-            setInvalidToken(true);
+        loadUser(newApiToken).catch((error) => {
+            if (error?.response?.data?.detail === 'Invalid token.') {
+                setInvalidToken(true);
+            } else {
+                throw error;
+            }
         });
     };
 
