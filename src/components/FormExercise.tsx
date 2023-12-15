@@ -35,6 +35,8 @@ const getDefaultFormValues = (exercise: ExerciseDataWithInfo): { [key: string]: 
     for (const portion of exercise.exercise_info.form_spec) {
         if (portion.type === 'dropdown' || portion.type === 'radio') {
             defaultFormValues[portion.key] = portion.enum[0];
+        } else if (portion.type === 'number' || portion.type === 'text' || portion.type === 'textarea') {
+            defaultFormValues[portion.key] = '';
         }
     }
     return defaultFormValues;
@@ -104,7 +106,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         );
     };
     const TextPortion = ({ portion }: { portion: TextSpec }): JSX.Element => {
-        const [localValue, setLocalValue] = useState<string>(formValues[portion.key] ?? '');
+        const [localValue, setLocalValue] = useState<string>(formValues[portion.key]);
         return (
             <>
                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
