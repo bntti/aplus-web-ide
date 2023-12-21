@@ -6,6 +6,7 @@ import { catcher } from './util';
 import { ApiTokenN } from '../StateProvider';
 
 const SubmissionSchema = z.union([
+    z.object({ status: z.literal('waiting') }),
     z.object({
         status: z.literal('rejected'),
         submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),

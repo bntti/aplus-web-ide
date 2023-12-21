@@ -38,7 +38,12 @@ type Props =
           codes?: null | string[];
           readOnly?: false;
       }
-    | { exercise: ExerciseDataWithInfo; callback?: null; codes: string[]; readOnly: true };
+    | {
+          exercise: ExerciseDataWithInfo;
+          callback?: null | (() => void);
+          codes: null | string[];
+          readOnly: true;
+      };
 
 const CodeEditor = ({
     exercise,
@@ -53,16 +58,17 @@ const CodeEditor = ({
     const theme = useTheme();
 
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
+    let storageEmpty = true;
     const storageCodes = [];
     for (let i = 0; i < portions.length; i++) {
         const storageCode = localStorage.getItem(`${exercise.id}.${i}`);
+        if (storageCode) storageEmpty = false;
+
         if (storageCode) storageCodes.push(storageCode);
         else if (defaultCodes) storageCodes.push(defaultCodes[i]);
         else storageCodes.push('');
     }
-
-    // @ts-expect-error defaultCodes cannot be null if readOnly is true
-    const [codes, setCodes] = useState<string[]>(readOnly ? defaultCodes : storageCodes);
+    const [codes, setCodes] = useState<string[]>(storageEmpty ? defaultCodes || storageCodes : storageCodes);
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [languages, setLanguages] = useState<string[]>(guessLanguages(portions));
     const [currentLanguage, setCurrentLanguage] = useState<string>(guessLanguages(portions)[0]);

@@ -1,4 +1,5 @@
 import {
+    Alert,
     Box,
     Button,
     Divider,
@@ -27,7 +28,7 @@ import {
     getTemplates,
 } from '../app/api/exercise';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
-import { SubmissionData, getSubmission } from '../app/api/submission';
+import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import PointsChip from '../components/PointsChip';
@@ -46,16 +47,30 @@ const Exercise = (): JSX.Element => {
     const [submitterStats, setSubmitterStats] = useState<SubmitterStats | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
+    const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
+    const [loading, setLoading] = useState<boolean>(true);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
+        setSubmissions(await getSubmissions(apiToken, exerciseId, navigate));
+
         const newSubmitterStats = await getSubmitterStats(apiToken, exerciseId, navigate);
         setSubmitterStats(newSubmitterStats);
-        setSubmissions(await getSubmissions(apiToken, exerciseId, navigate));
-        if (newSubmitterStats.submissions_with_points.length > 0) {
-            setLatestSubmission(
-                await getSubmission(apiToken, newSubmitterStats.submissions_with_points[0].id, navigate),
+
+        if (newSubmitterStats.submissions_with_points.length === 0) return;
+
+        const submissionId = newSubmitterStats.submissions_with_points[0].id;
+        const newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
+        setLatestSubmission(newLatestSubmission);
+
+        if (
+            newLatestSubmission.status !== 'waiting' &&
+            newLatestSubmission.status !== 'rejected' &&
+            newLatestSubmission.feedback_json === null
+        ) {
+            setLatestSubmissionFiles(
+                await getSubmissionFiles(apiToken, submissionId, newLatestSubmission.files, navigate),
             );
         }
     }, [apiToken, exerciseId, navigate]);
@@ -63,6 +78,7 @@ const Exercise = (): JSX.Element => {
     useEffect(() => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || exerciseId === undefined) return;
+            setLoading(true);
             const newExercise = await getExercise(apiToken, exerciseId, navigate);
             setExercise(newExercise);
 
@@ -79,6 +95,9 @@ const Exercise = (): JSX.Element => {
                     throw new Error('There are missing templates'); // Assuming only file portions
                 }
                 setTemplates(newTemplates); // Assumes correct order of templates
+                setLoading(false);
+            } else {
+                setLoading(false);
             }
         };
         getData().catch(console.error);
@@ -109,13 +128,9 @@ const Exercise = (): JSX.Element => {
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
     if (exerciseId === undefined) return <Navigate replace to="/courses" />;
     if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
-    if (
-        exercise === null ||
-        submitterStats === null ||
-        submissions === null ||
-        (exercise.templates && templates === null)
-    )
+    if (exercise === null || submitterStats === null || submissions === null || loading) {
         return <Typography>Loading exercise...</Typography>;
+    }
 
     return (
         <>
@@ -159,13 +174,29 @@ const Exercise = (): JSX.Element => {
             </Box>
 
             <TabPanel value={activeIndex} index={0}>
+                {numSubmissions >= exercise.max_submissions && (
+                    <Alert severity="info" sx={{ mb: 1 }}>
+                        All {exercise.max_submissions} submissions done.
+                    </Alert>
+                )}
+
                 {exercise.exercise_info === null ? (
                     <Typography>Exercise submission type info unavailable</Typography>
-                ) : numSubmissions >= exercise.max_submissions ? (
-                    <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
-                    <CodeEditor callback={callback} exercise={exercise as ExerciseDataWithInfo} codes={templates} />
-                ) : latestSubmission && latestSubmission.status !== 'rejected' && latestSubmission.feedback_json ? (
+                    <CodeEditor
+                        exercise={exercise as ExerciseDataWithInfo}
+                        callback={callback}
+                        codes={
+                            latestSubmissionFiles ??
+                            templates ??
+                            (Array(exercise.exercise_info.form_spec.length).fill('') as string[])
+                        }
+                        readOnly={numSubmissions >= exercise.max_submissions}
+                    />
+                ) : latestSubmission &&
+                  latestSubmission.status !== 'waiting' &&
+                  latestSubmission.status !== 'rejected' &&
+                  latestSubmission.feedback_json ? (
                     <FormExercise
                         exercise={exercise as ExerciseDataWithInfo}
                         apiToken={apiToken}
@@ -173,9 +204,15 @@ const Exercise = (): JSX.Element => {
                         answers={latestSubmission.submission_data as [string, string][]}
                         feedback={latestSubmission.feedback_json.error_fields}
                         points={latestSubmission.feedback_json.fields_points}
+                        readOnly={numSubmissions >= exercise.max_submissions}
                     />
                 ) : (
-                    <FormExercise exercise={exercise as ExerciseDataWithInfo} apiToken={apiToken} callback={callback} />
+                    <FormExercise
+                        exercise={exercise as ExerciseDataWithInfo}
+                        apiToken={apiToken}
+                        callback={callback}
+                        readOnly={numSubmissions >= exercise.max_submissions}
+                    />
                 )}
             </TabPanel>
 

@@ -42,11 +42,11 @@ type Props =
       }
     | {
           exercise: ExerciseDataWithInfo;
-          apiToken?: null;
-          callback?: null;
-          answers: [string, string][];
-          feedback: { [key: string]: string[] };
-          points: { [key: string]: { points: number; max_points: number } };
+          apiToken?: null | string;
+          callback?: null | (() => void);
+          answers?: null | [string, string][];
+          feedback?: null | { [key: string]: string[] };
+          points?: null | { [key: string]: { points: number; max_points: number } };
           readOnly: true;
       };
 type CheckBoxValues = { [key: string]: { [key: string]: boolean } };
