@@ -20,6 +20,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
 import { CourseData, CoursePoints, getCourse, getCoursePoints, getExercises } from '../app/api/course';
+import PointsChip from '../components/PointsChip';
 
 const Course = (): JSX.Element => {
     const { courseId } = useParams();
@@ -97,18 +98,7 @@ const Course = (): JSX.Element => {
                             )}
                             <Stack direction="row" spacing={1}>
                                 <Typography>Points</Typography>
-                                <Chip
-                                    size="small"
-                                    label={`${module.points} / ${module.max_points}`}
-                                    color={
-                                        module.points < module.points_to_pass
-                                            ? 'error'
-                                            : module.points < module.max_points
-                                              ? 'warning'
-                                              : 'success'
-                                    }
-                                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                                />
+                                <PointsChip points={module.points} maxPoints={module.max_points} size="small" />
                             </Stack>
                         </Stack>
                         <TableContainer>
@@ -166,22 +156,14 @@ const Course = (): JSX.Element => {
                                                 />
                                             </TableCell>
                                             <TableCell component="div" align="right">
-                                                <Chip
-                                                    label={`${exercise.points} / ${exercise.max_points}`}
+                                                <PointsChip
+                                                    points={exercise.points}
+                                                    maxPoints={exercise.max_points}
                                                     disabled={
                                                         exercise.submission_count ===
                                                         exerciseMaxSubmissions[exercise.id]
                                                     }
-                                                    color={
-                                                        exercise.submission_count === 0
-                                                            ? 'default'
-                                                            : exercise.points === 0 && exercise.max_points > 0
-                                                              ? 'error'
-                                                              : exercise.points < exercise.max_points
-                                                                ? 'warning'
-                                                                : 'success'
-                                                    }
-                                                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
+                                                    gray={exercise.submission_count === 0}
                                                 />
                                             </TableCell>
                                         </TableRow>

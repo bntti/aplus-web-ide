@@ -1,4 +1,4 @@
-import { Box, Button, Chip, Container, Paper, Stack, Tab, Tabs, Typography, useTheme } from '@mui/material';
+import { Box, Button, Container, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -7,13 +7,14 @@ import { getExercise } from '../app/api/exercise';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
 import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
 import CodeEditor from '../components/CodeEditor';
+import FormExercise from '../components/FormExercise';
+import PointsChip from '../components/PointsChip';
 import TabPanel from '../components/TabPanel';
 
 const Submission = (): JSX.Element => {
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
-    const currentTheme = useTheme();
     const navigate = useNavigate();
 
     const [codes, setCodes] = useState<string[] | null>(null);
@@ -26,9 +27,9 @@ const Submission = (): JSX.Element => {
             if (apiToken === null || submissionId === undefined) return;
             const newSubmission = await getSubmission(apiToken, submissionId, navigate);
             setSubmission(newSubmission);
-
-            if (newSubmission.files.length === 0) return; // Return if is not submission exercise
             setExercise(await getExercise(apiToken, newSubmission.exercise.id, navigate));
+
+            if (newSubmission.status === 'rejected' || newSubmission.feedback_json !== null) return; // Return if is not submission exercise
             setCodes(await getSubmissionFiles(apiToken, submissionId, newSubmission.files, navigate));
         };
 
@@ -49,8 +50,10 @@ const Submission = (): JSX.Element => {
         }
     });
 
-    if (submission === null) return <Typography>Loading exercise...</Typography>;
-    return (
+    if (submission === null || exercise === null) return <Typography>Loading exercise...</Typography>;
+    if (exercise?.exercise_info === null) return <Typography>No exercise info?</Typography>;
+
+    const base = (
         <>
             <Typography variant="h4">{parseName(submission.exercise.display_name)}</Typography>
             <Typography>Submission {submission.submission_time.toLocaleString()}</Typography>
@@ -64,24 +67,33 @@ const Submission = (): JSX.Element => {
                 >
                     Go back
                 </Button>
-                <Chip
-                    label={`${submission.grade} / ${submission.exercise.max_points}`}
-                    color={
-                        submission.grade === 0 && submission.exercise.max_points > 0
-                            ? 'error'
-                            : submission.grade < submission.exercise.max_points
-                              ? 'warning'
-                              : 'success'
-                    }
-                    variant={currentTheme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                />
+                <PointsChip points={submission.grade} maxPoints={submission.exercise.max_points} />
             </Stack>
-            {submission.files.length === 0 ? (
+        </>
+    );
+
+    if (submission.status === 'rejected')
+        return (
+            <>
+                {base}
+                <Typography variant="h5" color="error">
+                    Submission rejected
+                </Typography>
+            </>
+        );
+    return (
+        <>
+            {base}
+            {submission.feedback_json !== null ? (
                 <>
                     <Typography variant="h5">Feedback:</Typography>
-                    <Container component={Paper} sx={{ p: 2 }}>
-                        <div dangerouslySetInnerHTML={{ __html: submission.feedback }} />
-                    </Container>
+                    <FormExercise
+                        exercise={exercise as ExerciseDataWithInfo}
+                        answers={submission.submission_data as [string, string][]}
+                        feedback={submission.feedback_json.error_fields}
+                        points={submission.feedback_json.fields_points}
+                        readOnly
+                    />
                 </>
             ) : (
                 <>

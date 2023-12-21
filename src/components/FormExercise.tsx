@@ -5,17 +5,20 @@ import {
     FormControl,
     FormControlLabel,
     FormGroup,
+    FormHelperText,
     FormLabel,
     MenuItem,
     Paper,
     Radio,
     RadioGroup,
     Select,
+    Stack,
     TextField,
 } from '@mui/material';
 import axios from 'axios';
 import { useContext, useEffect, useState } from 'react';
 
+import PointsChip from './PointsChip';
 import { LanguageContext } from '../app/StateProvider';
 import {
     CheckboxSpec,
@@ -27,42 +30,83 @@ import {
     TextSpec,
 } from '../app/api/exerciseTypes';
 
-type Props = { exercise: ExerciseDataWithInfo; apiToken: string; callback: () => void };
-type CheckBoxValues = { [key: string]: { key: string; value: string; checked: boolean }[] };
+type Props =
+    | {
+          exercise: ExerciseDataWithInfo;
+          apiToken: string;
+          callback: () => void;
+          answers?: null | [string, string][];
+          feedback?: null | { [key: string]: string[] };
+          points?: null | { [key: string]: { points: number; max_points: number } };
+          readOnly?: false;
+      }
+    | {
+          exercise: ExerciseDataWithInfo;
+          apiToken?: null;
+          callback?: null;
+          answers: [string, string][];
+          feedback: { [key: string]: string[] };
+          points: { [key: string]: { points: number; max_points: number } };
+          readOnly: true;
+      };
+type CheckBoxValues = { [key: string]: { [key: string]: boolean } };
+type FormValues = { [key: string]: string };
 
-const getDefaultFormValues = (exercise: ExerciseDataWithInfo): { [key: string]: string } => {
-    const defaultFormValues: { [key: string]: string } = {};
+const init = (
+    exercise: ExerciseDataWithInfo,
+    answers: null | [string, string][],
+): { formValues: FormValues; checkBoxValues: CheckBoxValues } => {
+    const newAnswers: { [key: string]: string[] } = {};
+    if (answers !== null) {
+        for (const answer of answers) {
+            if (answer[0] in newAnswers) newAnswers[answer[0]].push(answer[1]);
+            else newAnswers[answer[0]] = [answer[1]];
+        }
+    }
+
+    const formValues: { [key: string]: string } = {};
     for (const portion of exercise.exercise_info.form_spec) {
-        if (portion.type === 'dropdown' || portion.type === 'radio') {
-            defaultFormValues[portion.key] = portion.enum[0];
+        if (portion.type === 'checkbox') continue;
+        if (portion.key in newAnswers) {
+            formValues[portion.key] = newAnswers[portion.key][0];
+        } else if (portion.type === 'dropdown' || portion.type === 'radio') {
+            formValues[portion.key] = portion.enum[0];
         } else if (portion.type === 'number' || portion.type === 'text' || portion.type === 'textarea') {
-            defaultFormValues[portion.key] = '';
+            formValues[portion.key] = '';
         }
     }
-    return defaultFormValues;
-};
-
-const getDefaultCheckboxValues = (exercise: ExerciseDataWithInfo): CheckBoxValues => {
-    const defaultFormCheckboxValues: CheckBoxValues = {};
+    const checkBoxValues: CheckBoxValues = {};
     for (const portion of exercise.exercise_info.form_spec) {
-        if (portion.type === 'checkbox') {
-            defaultFormCheckboxValues[portion.key] = [];
-            for (const [key, value] of Object.entries(portion.titleMap)) {
-                defaultFormCheckboxValues[portion.key].push({ key, value, checked: false });
-            }
+        if (portion.type !== 'checkbox') continue;
+
+        checkBoxValues[portion.key] = {};
+        for (const key of portion.enum) checkBoxValues[portion.key][key] = false;
+        if (portion.key in newAnswers) {
+            for (const answer of newAnswers[portion.key]) checkBoxValues[portion.key][answer] = true;
         }
     }
-    return defaultFormCheckboxValues;
+
+    return { formValues, checkBoxValues };
 };
 
-const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
+const FormExercise = ({
+    exercise,
+    apiToken = null,
+    callback = null,
+    answers = null,
+    feedback = null,
+    points = null,
+    readOnly = false,
+}: Props): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
         throw new Error('Tried to pass file type form to FormExercise');
     }
 
+    const defaultValues = init(exercise, answers);
+
     const { language } = useContext(LanguageContext);
-    const [formValues, setFormValues] = useState<{ [key: string]: string }>(getDefaultFormValues(exercise));
-    const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(getDefaultCheckboxValues(exercise));
+    const [formValues, setFormValues] = useState<FormValues>(defaultValues.formValues);
+    const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
 
     const i18n = exercise.exercise_info.form_i18n;
     const translate = (value: string): string => {
@@ -77,121 +121,109 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
         else return i18n[value].fi;
     };
 
+    const removeMargins = (value: string): string => {
+        return value.replace(/<p>/g, '<p style="margin:0;">');
+    };
+
     const RadioPortion = ({ portion }: { portion: RadioSpec }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string | undefined>(formValues[portion.key]);
         return (
-            <>
-                <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
-                <RadioGroup
-                    id={portion.key}
-                    aria-labelledby={portion.key}
-                    value={localValue}
-                    onChange={(_, value: string) => {
-                        setLocalValue(value);
-                        formValues[portion.key] = value;
-                        setFormValues(formValues);
-                    }}
-                >
-                    {Object.entries(portion.titleMap).map(([key, value]) => (
-                        <FormControlLabel
-                            key={key}
-                            value={key}
-                            control={<Radio required={portion.required} />}
-                            label={translate(value)}
-                        />
-                    ))}
-                </RadioGroup>
-            </>
+            <RadioGroup
+                id={portion.key}
+                aria-labelledby={portion.key}
+                value={localValue}
+                onChange={(_, value: string) => {
+                    setLocalValue(value);
+                    formValues[portion.key] = value;
+                    setFormValues(formValues);
+                }}
+            >
+                {Object.entries(portion.titleMap).map(([key, value]) => (
+                    <FormControlLabel
+                        key={key}
+                        value={key}
+                        disabled={readOnly}
+                        control={<Radio required={portion.required} />}
+                        label={translate(value)}
+                    />
+                ))}
+            </RadioGroup>
         );
     };
     const TextPortion = ({ portion }: { portion: TextSpec }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string>(formValues[portion.key]);
         return (
-            <>
-                <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
-                <TextField
-                    id={portion.key}
-                    aria-labelledby={portion.key}
-                    multiline={portion.type === 'textarea'}
-                    rows={portion.type === 'textarea' ? 5 : 1}
-                    type={portion.type === 'number' ? 'number' : 'text'}
-                    inputProps={{ step: 'any' }}
-                    required={portion.required}
-                    fullWidth
-                    value={localValue}
-                    onChange={(event) => {
-                        setLocalValue(event.target.value);
-                        formValues[portion.key] = event.target.value;
-                        setFormValues(formValues);
-                    }}
-                />
-            </>
+            <TextField
+                id={portion.key}
+                aria-labelledby={portion.key}
+                multiline={portion.type === 'textarea'}
+                rows={portion.type === 'textarea' ? 5 : 1}
+                type={portion.type === 'number' ? 'number' : 'text'}
+                inputProps={{ step: 'any' }}
+                required={portion.required}
+                fullWidth
+                value={localValue}
+                disabled={readOnly}
+                onChange={(event) => {
+                    setLocalValue(event.target.value);
+                    formValues[portion.key] = event.target.value;
+                    setFormValues(formValues);
+                }}
+            />
         );
     };
     const DropdownPortion = ({ portion }: { portion: DropdownSpec }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string>(formValues[portion.key]);
         return (
-            <>
-                <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
-                <Select
-                    id={portion.key}
-                    labelId={portion.key}
-                    value={localValue}
-                    required={portion.required}
-                    fullWidth
-                    onChange={(event) => {
-                        setLocalValue(event.target.value);
-                        formValues[portion.key] = event.target.value;
-                        setFormValues(formValues);
-                    }}
-                >
-                    {Object.entries(portion.titleMap).map(([key, value]) => (
-                        <MenuItem key={key} value={key}>
-                            {translate(value)}
-                        </MenuItem>
-                    ))}
-                </Select>
-            </>
+            <Select
+                id={portion.key}
+                labelId={portion.key}
+                value={localValue}
+                required={portion.required}
+                fullWidth
+                disabled={readOnly}
+                onChange={(event) => {
+                    setLocalValue(event.target.value);
+                    formValues[portion.key] = event.target.value;
+                    setFormValues(formValues);
+                }}
+            >
+                {Object.entries(portion.titleMap).map(([key, value]) => (
+                    <MenuItem key={key} value={key}>
+                        {translate(value)}
+                    </MenuItem>
+                ))}
+            </Select>
         );
     };
     const CheckboxPortion = ({ portion }: { portion: CheckboxSpec }): JSX.Element => {
-        type LocalState = { key: string; value: string; checked: boolean }[];
+        type LocalState = { [key: string]: boolean };
         const [localValue, setLocalValue] = useState<LocalState>(checkboxValues[portion.key]);
         return (
-            <>
-                <FormLabel id={portion.key}>{portion.title}</FormLabel>
-                {portion.description && <div dangerouslySetInnerHTML={{ __html: translate(portion.description) }} />}
-                <FormGroup id={portion.key} aria-labelledby={portion.key}>
-                    {localValue.map(({ key, value, checked }) => (
-                        <FormControlLabel
-                            id={key}
-                            key={key}
-                            control={
-                                <Checkbox
-                                    checked={checked}
-                                    onChange={(event) => {
-                                        setLocalValue(
-                                            localValue.map((item) =>
-                                                item.key === key ? { ...item, checked: event.target.checked } : item,
-                                            ),
-                                        );
+            <FormGroup id={portion.key} aria-labelledby={portion.key}>
+                {Object.entries(portion.titleMap).map(([key, value]) => (
+                    <FormControlLabel
+                        id={key}
+                        key={key}
+                        disabled={readOnly}
+                        control={
+                            <Checkbox
+                                checked={localValue[key]}
+                                onChange={(event) => {
+                                    const newVal = { ...localValue };
+                                    newVal[key] = event.target.checked;
+                                    setLocalValue(newVal);
 
-                                        checkboxValues[portion.key] = localValue.map((item) =>
-                                            item.key === key ? { ...item, checked: event.target.checked } : item,
-                                        );
-                                        setcheckboxValues(checkboxValues);
-                                    }}
-                                    required={portion.required}
-                                />
-                            }
-                            label={translate(value)}
-                        />
-                    ))}
-                </FormGroup>
-            </>
+                                    checkboxValues[portion.key] = newVal;
+                                    setcheckboxValues(checkboxValues);
+                                }}
+                                required={portion.required}
+                            />
+                        }
+                        label={translate(value)}
+                    />
+                ))}
+            </FormGroup>
         );
     };
 
@@ -226,7 +258,7 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
             formData.append(portionKey, selectedValue);
         }
         for (const [portionKey, values] of Object.entries(checkboxValues)) {
-            for (const { key, checked } of values) {
+            for (const [key, checked] of Object.entries(values)) {
                 if (checked === true) formData.append(portionKey, key);
             }
         }
@@ -253,12 +285,39 @@ const FormExercise = ({ exercise, apiToken, callback }: Props): JSX.Element => {
                             />
                         )
                     ) : (
-                        <FormControl sx={{ mb: 1, display: 'block' }} key={portion.key}>
+                        <FormControl
+                            sx={{ mb: 3, display: 'block' }}
+                            key={portion.key}
+                            error={(points && points[portion.key].points < points[portion.key].max_points) ?? false}
+                        >
+                            <Stack direction="row" spacing={1}>
+                                <FormLabel id={portion.key}>{portion.title}</FormLabel>
+                                {points && (
+                                    <PointsChip
+                                        points={points[portion.key].points}
+                                        maxPoints={points[portion.key].max_points}
+                                        size="small"
+                                    />
+                                )}
+                            </Stack>
+                            {portion.description && (
+                                <div
+                                    style={{ marginTop: 2, marginBottom: 1 }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: removeMargins(translate(portion.description)),
+                                    }}
+                                />
+                            )}
                             <Portion portion={portion} />
+                            {feedback && portion.key in feedback && feedback[portion.key].length > 0 && (
+                                <FormHelperText
+                                    dangerouslySetInnerHTML={{ __html: feedback[portion.key].join('\n') }}
+                                />
+                            )}
                         </FormControl>
                     ),
                 )}
-                <Button type="submit">Submit</Button>
+                {!readOnly && <Button type="submit">Submit</Button>}
             </form>
         </Container>
     );

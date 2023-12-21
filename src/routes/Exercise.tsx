@@ -1,7 +1,6 @@
 import {
     Box,
     Button,
-    Chip,
     Divider,
     Paper,
     Stack,
@@ -14,7 +13,6 @@ import {
     TableRow,
     Tabs,
     Typography,
-    useTheme,
 } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -29,8 +27,10 @@ import {
     getTemplates,
 } from '../app/api/exercise';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
+import { SubmissionData, getSubmission } from '../app/api/submission';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
+import PointsChip from '../components/PointsChip';
 import TabPanel from '../components/TabPanel';
 
 const Exercise = (): JSX.Element => {
@@ -40,18 +40,24 @@ const Exercise = (): JSX.Element => {
     const { graderToken } = useContext(GraderTokenContext);
     const { language } = useContext(LanguageContext);
     const navigate = useNavigate();
-    const theme = useTheme();
 
     const [exercise, setExercise] = useState<ExerciseData | null>(null);
     const [templates, setTemplates] = useState<string[] | null>(null);
     const [submitterStats, setSubmitterStats] = useState<SubmitterStats | null>(null);
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
+    const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
-        setSubmitterStats(await getSubmitterStats(apiToken, exerciseId, navigate));
+        const newSubmitterStats = await getSubmitterStats(apiToken, exerciseId, navigate);
+        setSubmitterStats(newSubmitterStats);
         setSubmissions(await getSubmissions(apiToken, exerciseId, navigate));
+        if (newSubmitterStats.submissions_with_points.length > 0) {
+            setLatestSubmission(
+                await getSubmission(apiToken, newSubmitterStats.submissions_with_points[0].id, navigate),
+            );
+        }
     }, [apiToken, exerciseId, navigate]);
 
     useEffect(() => {
@@ -137,19 +143,11 @@ const Exercise = (): JSX.Element => {
                 <Button variant="outlined" size="small" component={Link} to={`/course/${exercise.course.id}`}>
                     Back to course
                 </Button>
-                <Chip
+                <PointsChip
+                    points={submitterStats.points}
+                    maxPoints={exercise.max_points}
+                    gray={numSubmissions === 0}
                     sx={{ mt: 0.5 }}
-                    label={`${submitterStats.points} / ${exercise.max_points}`}
-                    color={
-                        numSubmissions === 0
-                            ? 'default'
-                            : submitterStats.points === 0 && exercise.max_points > 0
-                              ? 'error'
-                              : submitterStats.points < exercise.max_points
-                                ? 'warning'
-                                : 'success'
-                    }
-                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
                 />
             </Stack>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
@@ -167,6 +165,15 @@ const Exercise = (): JSX.Element => {
                     <Typography>All {exercise.max_submissions} submissions done.</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
                     <CodeEditor callback={callback} exercise={exercise as ExerciseDataWithInfo} codes={templates} />
+                ) : latestSubmission && latestSubmission.status !== 'rejected' && latestSubmission.feedback_json ? (
+                    <FormExercise
+                        exercise={exercise as ExerciseDataWithInfo}
+                        apiToken={apiToken}
+                        callback={callback}
+                        answers={latestSubmission.submission_data as [string, string][]}
+                        feedback={latestSubmission.feedback_json.error_fields}
+                        points={latestSubmission.feedback_json.fields_points}
+                    />
                 ) : (
                     <FormExercise exercise={exercise as ExerciseDataWithInfo} apiToken={apiToken} callback={callback} />
                 )}
@@ -203,17 +210,7 @@ const Exercise = (): JSX.Element => {
                                             <Typography>{numSubmissions - index}</Typography>
                                         </TableCell>
                                         <TableCell component="div">
-                                            <Chip
-                                                label={`${submission.grade} / ${exercise.max_points}`}
-                                                color={
-                                                    submission.grade === 0 && exercise.max_points > 0
-                                                        ? 'error'
-                                                        : submission.grade < exercise.max_points
-                                                          ? 'warning'
-                                                          : 'success'
-                                                }
-                                                variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                                            />
+                                            <PointsChip points={submission.grade} maxPoints={exercise.max_points} />
                                         </TableCell>
                                         <TableCell component="div" align="right">
                                             <Typography>{submission.submission_time.toLocaleString()}</Typography>
