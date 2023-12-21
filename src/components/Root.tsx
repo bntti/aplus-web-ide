@@ -31,8 +31,8 @@ const Root = (): JSX.Element => {
         <ThemeContext.Provider value={{ colorMode }}>
             <ThemeProvider theme={theme}>
                 <CssBaseline enableColorScheme />
+                <ToolBar />
                 <Container sx={{ paddingBottom: '50px' }}>
-                    <ToolBar />
                     <Outlet />
                 </Container>
             </ThemeProvider>
