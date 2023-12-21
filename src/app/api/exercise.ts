@@ -2,7 +2,7 @@ import axios from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
-import { ExerciseDataSchema, ExerciseData } from './exerciseTypes';
+import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
 import { catcher } from './util';
 import { ApiTokenN, GraderToken } from '../StateProvider';
 
