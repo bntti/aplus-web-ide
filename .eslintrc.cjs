@@ -34,6 +34,7 @@ module.exports = {
             {
                 groups: ['builtin', 'external', 'internal', ['sibling', 'parent'], 'index', 'unknown'],
                 'newlines-between': 'always',
+                alphabetize: { order: 'asc' },
             },
         ],
         'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],

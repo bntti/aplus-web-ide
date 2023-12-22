@@ -15,6 +15,7 @@ import {
     Tabs,
     Typography,
 } from '@mui/material';
+import { AxiosResponse } from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
@@ -48,6 +49,7 @@ const Exercise = (): JSX.Element => {
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
     const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
+    const [validationErrors, setValidationErrors] = useState<{ [key: string]: string[] } | null>(null);
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
 
@@ -103,9 +105,29 @@ const Exercise = (): JSX.Element => {
         }
     }, [state, activeIndex]);
 
-    const callback = (): void => {
+    const codeCallback = (): void => {
         getSubmissionsData().catch(console.error);
         setActiveIndex(1);
+    };
+    const formCallback = (response: AxiosResponse): void => {
+        if (apiToken === null) throw new Error('formCallback was called with null apiToken');
+        const submissionApiUrl = JSON.stringify(response.headers.location, null, 4); // TODO: Check that works in prod
+        const submissionId = parseInt(submissionApiUrl.split('/').pop() as string);
+        const loadSubmission = async (): Promise<void> => {
+            const newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
+            if (newLatestSubmission.type === 'waiting') {
+                setTimeout(loadSubmission, 500); // TODO: better delay & show loading text / animation
+                return;
+            } else if (newLatestSubmission.type === 'questionnaire') {
+                setLatestSubmission(newLatestSubmission);
+                setValidationErrors(null);
+            } else if (newLatestSubmission.type === 'rejected') {
+                setValidationErrors(newLatestSubmission.feedback_json.validation_errors);
+                console.log(`New Latest\n${JSON.stringify(latestSubmission, null, 4)}`);
+            }
+        };
+        getSubmissionsData().catch(console.error);
+        loadSubmission().catch(console.error);
     };
 
     const parseName = (name: string): string => {
@@ -116,7 +138,7 @@ const Exercise = (): JSX.Element => {
         throw new Error(`Invalid language ${language}`);
     };
 
-    const numSubmissions = submitterStats ? submitterStats.submissions_with_points.length : 0;
+    const numSubmissions = submitterStats ? submitterStats.submission_count : 0;
 
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
     if (exerciseId === undefined) return <Navigate replace to="/courses" />;
@@ -168,7 +190,7 @@ const Exercise = (): JSX.Element => {
 
             <TabPanel value={activeIndex} index={0}>
                 {numSubmissions >= exercise.max_submissions && (
-                    <Alert severity="info" sx={{ mb: 1 }}>
+                    <Alert variant="outlined" severity="info" sx={{ mb: 1 }}>
                         All {exercise.max_submissions} submissions done.
                     </Alert>
                 )}
@@ -178,7 +200,7 @@ const Exercise = (): JSX.Element => {
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
                     <CodeEditor
                         exercise={exercise as ExerciseDataWithInfo}
-                        callback={callback}
+                        callback={codeCallback}
                         codes={
                             latestSubmissionFiles ??
                             templates ??
@@ -190,17 +212,19 @@ const Exercise = (): JSX.Element => {
                     <FormExercise
                         exercise={exercise as ExerciseDataWithInfo}
                         apiToken={apiToken}
-                        callback={callback}
+                        callback={formCallback}
                         answers={latestSubmission.submission_data as [string, string][]}
                         feedback={latestSubmission.feedback_json.error_fields}
                         points={latestSubmission.feedback_json.fields_points}
+                        validationErrors={validationErrors}
                         readOnly={numSubmissions >= exercise.max_submissions}
                     />
                 ) : (
                     <FormExercise
                         exercise={exercise as ExerciseDataWithInfo}
                         apiToken={apiToken}
-                        callback={callback}
+                        callback={formCallback}
+                        validationErrors={validationErrors}
                         readOnly={numSubmissions >= exercise.max_submissions}
                     />
                 )}

@@ -19,6 +19,7 @@ const SubmissionBaseSchema = z.object({
 const WaitingSubmissionSchema = z.object({ status: z.literal('waiting') });
 const RejectedSubmissionSchema = SubmissionBaseSchema.extend({
     status: z.literal('rejected'),
+    feedback_json: z.object({ validation_errors: z.record(z.array(z.string())) }),
 });
 const FileSubmissionSchema = SubmissionBaseSchema.extend({
     status: z.literal('ready'),

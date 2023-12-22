@@ -1,4 +1,6 @@
 import {
+    Alert,
+    AlertTitle,
     Button,
     Checkbox,
     Container,
@@ -14,8 +16,9 @@ import {
     Select,
     Stack,
     TextField,
+    Typography,
 } from '@mui/material';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { useContext, useEffect, useState } from 'react';
 
 import PointsChip from './PointsChip';
@@ -34,19 +37,21 @@ type Props =
     | {
           exercise: ExerciseDataWithInfo;
           apiToken: string;
-          callback: () => void;
+          callback: (response: AxiosResponse) => void;
           answers?: null | [string, string][];
           feedback?: null | { [key: string]: string[] };
           points?: null | { [key: string]: { points: number; max_points: number } };
+          validationErrors?: null | { [key: string]: string[] };
           readOnly?: false;
       }
     | {
           exercise: ExerciseDataWithInfo;
           apiToken?: null | string;
-          callback?: null | (() => void);
+          callback?: null | ((response: AxiosResponse) => void);
           answers?: null | [string, string][];
           feedback?: null | { [key: string]: string[] };
           points?: null | { [key: string]: { points: number; max_points: number } };
+          validationErrors?: null | { [key: string]: string[] };
           readOnly: true;
       };
 type CheckBoxValues = { [key: string]: { [key: string]: boolean } };
@@ -96,6 +101,7 @@ const FormExercise = ({
     answers = null,
     feedback = null,
     points = null,
+    validationErrors = null,
     readOnly = false,
 }: Props): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
@@ -121,8 +127,9 @@ const FormExercise = ({
         else return i18n[value].fi;
     };
 
-    const removeMargins = (value: string): string => {
-        return value.replace(/<p>/g, '<p style="margin:0;">');
+    const removeMargins = (value: string, error: boolean): string => {
+        if (error) return value.replace(/<p/g, '<p style="margin:0;color:red"');
+        return value.replace(/<p/g, '<p style="margin:0"');
     };
 
     const RadioPortion = ({ portion }: { portion: RadioSpec }): JSX.Element => {
@@ -150,7 +157,7 @@ const FormExercise = ({
             </RadioGroup>
         );
     };
-    const TextPortion = ({ portion }: { portion: TextSpec }): JSX.Element => {
+    const TextPortion = ({ portion, error }: { portion: TextSpec; error: boolean }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string>(formValues[portion.key]);
         return (
             <TextField
@@ -163,6 +170,7 @@ const FormExercise = ({
                 required={portion.required}
                 fullWidth
                 value={localValue}
+                error={error}
                 disabled={readOnly}
                 onChange={(event) => {
                     setLocalValue(event.target.value);
@@ -227,16 +235,16 @@ const FormExercise = ({
         );
     };
 
-    const Portion = ({ portion }: { portion: FormSpec }): JSX.Element => {
+    const Portion = ({ portion, error }: { portion: FormSpec; error: boolean }): JSX.Element => {
         switch (portion.type) {
             case 'radio':
                 return <RadioPortion portion={portion} />;
             case 'text':
-                return <TextPortion portion={portion} />;
+                return <TextPortion portion={portion} error={error} />;
             case 'textarea':
-                return <TextPortion portion={portion} />;
+                return <TextPortion portion={portion} error={error} />;
             case 'number':
-                return <TextPortion portion={portion} />;
+                return <TextPortion portion={portion} error={error} />;
             case 'dropdown':
                 return <DropdownPortion portion={portion} />;
             case 'checkbox':
@@ -273,8 +281,34 @@ const FormExercise = ({
 
     type PortionType = (FormSpec | StaticSpec)[];
     const portions: PortionType = exercise.exercise_info.form_spec as unknown as PortionType;
+
+    const portionTitles: { [key: string]: string } = {};
+    for (const portion of portions) {
+        if (portion.type !== 'static') portionTitles[portion.key] = portion.title;
+    }
+
+    const combinedFeedback: { [key: string]: string[] } = {};
+    if (validationErrors) {
+        for (const [key, error] of Object.entries(validationErrors)) combinedFeedback[key] = error;
+    }
+    if (feedback) {
+        for (const [key, feedbackText] of Object.entries(feedback)) {
+            combinedFeedback[key] = [...(combinedFeedback[key] ?? []), ...feedbackText];
+        }
+    }
+
     return (
         <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
+            {validationErrors && (
+                <Alert variant="outlined" severity="error" sx={{ mb: 2 }}>
+                    <AlertTitle>Submission failed due to the following reasons:</AlertTitle>
+                    {Object.entries(validationErrors).map(([key, error]) => (
+                        <Typography variant="body2" key={`validation-${key}`}>
+                            {portionTitles[key]}: {error}
+                        </Typography>
+                    ))}
+                </Alert>
+            )}
             <form onSubmit={handleSubmit}>
                 {portions.map((portion) =>
                     portion.type === 'static' ? (
@@ -288,9 +322,9 @@ const FormExercise = ({
                         <FormControl
                             sx={{ mb: 3, display: 'block' }}
                             key={portion.key}
-                            error={(points && points[portion.key].points < points[portion.key].max_points) ?? false}
+                            error={!!validationErrors && portion.key in validationErrors}
                         >
-                            <Stack direction="row" spacing={1}>
+                            <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
                                 <FormLabel id={portion.key}>{portion.title}</FormLabel>
                                 {points && (
                                     <PointsChip
@@ -302,16 +336,20 @@ const FormExercise = ({
                             </Stack>
                             {portion.description && (
                                 <div
-                                    style={{ marginTop: 2, marginBottom: 1 }}
+                                    style={{ marginTop: 1, marginBottom: 1 }}
                                     dangerouslySetInnerHTML={{
-                                        __html: removeMargins(translate(portion.description)),
+                                        __html: removeMargins(
+                                            translate(portion.description),
+                                            !!validationErrors && portion.key in validationErrors,
+                                        ),
                                     }}
                                 />
                             )}
-                            <Portion portion={portion} />
-                            {feedback && portion.key in feedback && feedback[portion.key].length > 0 && (
+                            <Portion portion={portion} error={!!validationErrors && portion.key in validationErrors} />
+                            {portion.key in combinedFeedback && combinedFeedback[portion.key].length > 0 && (
                                 <FormHelperText
-                                    dangerouslySetInnerHTML={{ __html: feedback[portion.key].join('\n') }}
+                                    variant="standard"
+                                    dangerouslySetInnerHTML={{ __html: combinedFeedback[portion.key].join('\n') }}
                                 />
                             )}
                         </FormControl>

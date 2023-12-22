@@ -14,6 +14,7 @@ const SubmitterStatsSchema = z.object({
             grade: z.number().int().nonnegative(),
         }),
     ),
+    submission_count: z.number().int().nonnegative(),
     points_to_pass: z.number().int().nonnegative(),
     points: z.number().int().nonnegative(),
     passed: z.boolean(),
