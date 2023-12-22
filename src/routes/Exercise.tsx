@@ -64,15 +64,8 @@ const Exercise = (): JSX.Element => {
         const newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
         setLatestSubmission(newLatestSubmission);
 
-        if (
-            newLatestSubmission.status !== 'waiting' &&
-            newLatestSubmission.status !== 'rejected' &&
-            newLatestSubmission.feedback_json === null
-        ) {
-            setLatestSubmissionFiles(
-                await getSubmissionFiles(apiToken, submissionId, newLatestSubmission.files, navigate),
-            );
-        }
+        if (newLatestSubmission.type !== 'file') return;
+        setLatestSubmissionFiles(await getSubmissionFiles(apiToken, submissionId, newLatestSubmission.files, navigate));
     }, [apiToken, exerciseId, navigate]);
 
     useEffect(() => {
@@ -193,10 +186,7 @@ const Exercise = (): JSX.Element => {
                         }
                         readOnly={numSubmissions >= exercise.max_submissions}
                     />
-                ) : latestSubmission &&
-                  latestSubmission.status !== 'waiting' &&
-                  latestSubmission.status !== 'rejected' &&
-                  latestSubmission.feedback_json ? (
+                ) : latestSubmission && latestSubmission.type === 'questionnaire' ? (
                     <FormExercise
                         exercise={exercise as ExerciseDataWithInfo}
                         apiToken={apiToken}

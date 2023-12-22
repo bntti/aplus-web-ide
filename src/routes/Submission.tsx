@@ -27,14 +27,14 @@ const Submission = (): JSX.Element => {
             if (apiToken === null || submissionId === undefined) return;
             const newSubmission = await getSubmission(apiToken, submissionId, navigate);
             setSubmission(newSubmission);
-            if (newSubmission.status === 'waiting') {
+            if (newSubmission.type === 'waiting') {
                 // TODO: test if this works
                 setTimeout(getData, 5000);
                 return;
             }
             setExercise(await getExercise(apiToken, newSubmission.exercise.id, navigate));
 
-            if (newSubmission.status === 'rejected' || newSubmission.feedback_json !== null) return; // Return if is not submission exercise
+            if (newSubmission.type !== 'file') return;
             setCodes(await getSubmissionFiles(apiToken, submissionId, newSubmission.files, navigate));
         };
 
@@ -56,7 +56,7 @@ const Submission = (): JSX.Element => {
     });
 
     if (submission === null || exercise === null) return <Typography>Loading exercise...</Typography>;
-    if (submission.status === 'waiting') return <Typography>Waiting for grading</Typography>;
+    if (submission.type === 'waiting') return <Typography>Waiting for grading</Typography>;
     if (exercise?.exercise_info === null) return <Typography>No exercise info?</Typography>;
 
     const base = (
@@ -78,7 +78,7 @@ const Submission = (): JSX.Element => {
         </>
     );
 
-    if (submission.status === 'rejected')
+    if (submission.type === 'rejected')
         return (
             <>
                 {base}
@@ -90,7 +90,7 @@ const Submission = (): JSX.Element => {
     return (
         <>
             {base}
-            {submission.feedback_json !== null ? (
+            {submission.type === 'questionnaire' ? (
                 <>
                     <Typography variant="h5">Feedback:</Typography>
                     <FormExercise
