@@ -17,6 +17,7 @@ import {
     Stack,
     TextField,
     Typography,
+    styled,
 } from '@mui/material';
 import axios, { AxiosResponse } from 'axios';
 import { useContext, useEffect, useState } from 'react';
@@ -32,6 +33,15 @@ import {
     StaticSpec,
     TextSpec,
 } from '../app/api/exerciseTypes';
+
+const NoButtonsTextField = styled(TextField)(() => ({
+    '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+        display: 'none',
+    },
+    '& input[type=number]': {
+        MozAppearance: 'textfield',
+    },
+}));
 
 type Props =
     | {
@@ -160,7 +170,7 @@ const FormExercise = ({
     const TextPortion = ({ portion, error }: { portion: TextSpec; error: boolean }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string>(formValues[portion.key]);
         return (
-            <TextField
+            <NoButtonsTextField
                 id={portion.key}
                 aria-labelledby={portion.key}
                 multiline={portion.type === 'textarea'}
