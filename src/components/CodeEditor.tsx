@@ -61,7 +61,7 @@ const CodeEditor = ({
     let storageEmpty = true;
     const storageCodes = [];
     for (let i = 0; i < portions.length; i++) {
-        const storageCode = localStorage.getItem(`${exercise.id}.${i}`);
+        const storageCode = localStorage.getItem(`code-${exercise.id}-${i}`);
         if (storageCode) storageEmpty = false;
 
         if (storageCode) storageCodes.push(storageCode);
@@ -155,7 +155,7 @@ const CodeEditor = ({
                 value={codes[tabIndex]}
                 height="55vh"
                 onChange={(val) => {
-                    localStorage.setItem(`${exercise.id}.${tabIndex}`, val);
+                    localStorage.setItem(`code-${exercise.id}-${tabIndex}`, val);
                     codes[tabIndex] = val;
                     setCodes(codes);
                 }}
