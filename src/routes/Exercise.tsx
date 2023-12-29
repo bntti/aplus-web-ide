@@ -19,7 +19,7 @@ import { AxiosResponse } from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { ApiTokenContext, GraderTokenContext, LanguageContext } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
 import {
     Submissions,
     SubmitterStats,
@@ -29,6 +29,7 @@ import {
     getTemplates,
 } from '../app/api/exercise';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
+import { getGraderToken } from '../app/api/login';
 import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
@@ -39,7 +40,8 @@ const Exercise = (): JSX.Element => {
     const { state } = useLocation();
     const { exerciseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
-    const { graderToken } = useContext(GraderTokenContext);
+    const { graderToken, setGraderToken } = useContext(GraderTokenContext);
+    const { user } = useContext(UserContext);
     const { language } = useContext(LanguageContext);
     const navigate = useNavigate();
 
@@ -72,7 +74,7 @@ const Exercise = (): JSX.Element => {
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            if (apiToken === null || exerciseId === undefined) return;
+            if (apiToken === null || exerciseId === undefined || user === null) return;
             setLoading(true);
             const newExercise = await getExercise(apiToken, exerciseId, navigate);
             setExercise(newExercise);
@@ -81,13 +83,19 @@ const Exercise = (): JSX.Element => {
 
             if (newExercise.templates && newExercise.exercise_info) {
                 const templateNames = newExercise.templates.split(' ');
-                const newTemplates = await getTemplates(graderToken, templateNames).catch(() => {
-                    navigate('/logout');
-                    throw new Error('Failed to get templates, most likely a bad grader api key');
+                const newTemplates = await getTemplates(graderToken, templateNames).catch(async (error) => {
+                    if (error.response.data !== 'Expired token') {
+                        throw new Error(`Unknown error with grader ${error.response.data}`);
+                    }
+
+                    const newGraderToken = await getGraderToken(apiToken, user.enrolled_courses); // TODO: handle possible infinite loop
+                    setGraderToken(newGraderToken);
+                    localStorage.setItem('graderToken', newGraderToken);
+                    throw new Error('Failed to fetch templates: grader token expired');
                 });
 
                 if (newTemplates.length !== newExercise.exercise_info.form_spec.length) {
-                    throw new Error('There are missing templates'); // Assuming only file portions
+                    throw new Error('There are missing templates'); // Assuming only file portions in form_spec
                 }
                 setTemplates(newTemplates); // Assumes correct order of templates
                 setLoading(false);
@@ -96,7 +104,7 @@ const Exercise = (): JSX.Element => {
             }
         };
         getData().catch(console.error);
-    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData]);
+    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken]);
 
     useEffect(() => {
         if (state && state.showSubmissions && activeIndex !== 1) {

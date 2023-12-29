@@ -71,7 +71,6 @@ export const getTemplates = async (graderToken: GraderToken, templateNames: stri
             template.replace('http://grader:8080', '/grader'), // TODO: change in prod?
             { headers: { Authorization: `Bearer ${graderToken}` } },
         );
-        if (templateResponse.data.startsWith('<!doctype html>')) throw new Error('Invalid token.');
         templates.push(templateResponse.data);
     }
     return templates;
