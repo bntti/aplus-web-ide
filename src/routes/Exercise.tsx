@@ -34,6 +34,7 @@ import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/su
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import PointsChip from '../components/PointsChip';
+import SubmissionSnackbar, { SubmissionStatus } from '../components/SubmissionSnackbar';
 import TabPanel from '../components/TabPanel';
 
 const Exercise = (): JSX.Element => {
@@ -52,8 +53,10 @@ const Exercise = (): JSX.Element => {
     const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
     const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
     const [validationErrors, setValidationErrors] = useState<{ [key: string]: string[] } | null>(null);
+
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
+    const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('hidden');
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
@@ -127,13 +130,15 @@ const Exercise = (): JSX.Element => {
                 setTimeout(loadSubmission, 500); // TODO: better delay & show loading text / animation
                 return;
             } else if (newLatestSubmission.type === 'questionnaire') {
+                setSubmissionStatus('success');
                 setLatestSubmission(newLatestSubmission);
                 setValidationErrors(null);
             } else if (newLatestSubmission.type === 'rejected') {
+                setSubmissionStatus('rejected');
                 setValidationErrors(newLatestSubmission.feedback_json.validation_errors);
-                console.log(`New Latest\n${JSON.stringify(latestSubmission, null, 4)}`);
             }
         };
+        setSubmissionStatus('loading');
         getSubmissionsData().catch(console.error);
         loadSubmission().catch(console.error);
     };
@@ -216,25 +221,30 @@ const Exercise = (): JSX.Element => {
                         }
                         readOnly={numSubmissions >= exercise.max_submissions}
                     />
-                ) : latestSubmission && latestSubmission.type === 'questionnaire' ? (
-                    <FormExercise
-                        exercise={exercise as ExerciseDataWithInfo}
-                        apiToken={apiToken}
-                        callback={formCallback}
-                        answers={latestSubmission.submission_data as [string, string][]}
-                        feedback={latestSubmission.feedback_json.error_fields}
-                        points={latestSubmission.feedback_json.fields_points}
-                        validationErrors={validationErrors}
-                        readOnly={numSubmissions >= exercise.max_submissions}
-                    />
                 ) : (
-                    <FormExercise
-                        exercise={exercise as ExerciseDataWithInfo}
-                        apiToken={apiToken}
-                        callback={formCallback}
-                        validationErrors={validationErrors}
-                        readOnly={numSubmissions >= exercise.max_submissions}
-                    />
+                    <>
+                        <SubmissionSnackbar status={submissionStatus} setStatus={setSubmissionStatus} />
+                        {latestSubmission && latestSubmission.type === 'questionnaire' ? (
+                            <FormExercise
+                                exercise={exercise as ExerciseDataWithInfo}
+                                apiToken={apiToken}
+                                callback={formCallback}
+                                answers={latestSubmission.submission_data as [string, string][]}
+                                feedback={latestSubmission.feedback_json.error_fields}
+                                points={latestSubmission.feedback_json.fields_points}
+                                validationErrors={validationErrors}
+                                readOnly={numSubmissions >= exercise.max_submissions}
+                            />
+                        ) : (
+                            <FormExercise
+                                exercise={exercise as ExerciseDataWithInfo}
+                                apiToken={apiToken}
+                                callback={formCallback}
+                                validationErrors={validationErrors}
+                                readOnly={numSubmissions >= exercise.max_submissions}
+                            />
+                        )}
+                    </>
                 )}
             </TabPanel>
 
