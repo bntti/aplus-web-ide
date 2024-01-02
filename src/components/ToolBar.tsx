@@ -1,5 +1,4 @@
-import { Brightness3, Brightness7 } from '@mui/icons-material';
-import LogoutIcon from '@mui/icons-material/Logout';
+import { Brightness3, Brightness7, Home, Logout } from '@mui/icons-material';
 import TranslateIcon from '@mui/icons-material/Translate';
 import { AppBar, Button, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
 import { useContext } from 'react';
@@ -17,9 +16,9 @@ const ToolBar = (): JSX.Element => {
     return (
         <AppBar position="static" sx={{ mb: 2.5 }}>
             <Toolbar>
-                <Button color="inherit" component={Link} to="/courses">
-                    Courses
-                </Button>
+                <IconButton color="inherit" size="large" component={Link} to="/">
+                    <Home />
+                </IconButton>
 
                 <IconButton
                     sx={{ marginLeft: 'auto' }}
@@ -36,9 +35,9 @@ const ToolBar = (): JSX.Element => {
                 </IconButton>
 
                 {apiToken === null ? (
-                    <Typography color="inherit">
-                        <em>Not Logged in</em>
-                    </Typography>
+                    <Button color="inherit" component={Link} to="/login">
+                        Login
+                    </Button>
                 ) : (
                     <>
                         <Typography color="inherit">
@@ -46,7 +45,7 @@ const ToolBar = (): JSX.Element => {
                         </Typography>
 
                         <IconButton color="inherit" component={Link} to="/logout" size="large">
-                            <LogoutIcon />
+                            <Logout />
                         </IconButton>
                     </>
                 )}

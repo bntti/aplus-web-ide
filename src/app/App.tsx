@@ -1,12 +1,12 @@
 import { Typography } from '@mui/material';
 import { useContext, useEffect } from 'react';
-import { Navigate, RouterProvider, createBrowserRouter, redirect } from 'react-router-dom';
+import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from './StateProvider';
 import Root from '../components/Root';
 import Course from '../routes/Course';
-import Courses from '../routes/Courses';
 import Exercise from '../routes/Exercise';
+import Home from '../routes/Home';
 import Login from '../routes/Login';
 import Logout from '../routes/Logout';
 import Submission from '../routes/Submission';
@@ -60,18 +60,10 @@ const router = createBrowserRouter([
         children: [
             {
                 path: '/',
-                loader: () => redirect('/courses'),
+                element: <Home />,
             },
             { path: 'login', element: <Login /> },
             { path: 'logout', element: <Logout /> },
-            {
-                path: 'courses',
-                element: (
-                    <RequireAuth>
-                        <Courses />
-                    </RequireAuth>
-                ),
-            },
             {
                 path: 'course/:courseId?',
                 element: (

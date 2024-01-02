@@ -22,7 +22,7 @@ const Logout = (): JSX.Element => {
         setUser(null);
         setGraderToken(null);
         localStorage.clear();
-        navigate('/login');
+        navigate('/');
     }, [needsConfirm, navigate, setApiToken, setGraderToken, setUser]);
 
     if (needsConfirm) {
