@@ -1,5 +1,6 @@
 import { Box, Button, Container, Paper, Stack, Tab, Tabs, Typography } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
@@ -15,6 +16,7 @@ const Submission = (): JSX.Element => {
     const { submissionId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [codes, setCodes] = useState<string[] | null>(null);
@@ -55,14 +57,16 @@ const Submission = (): JSX.Element => {
         }
     });
 
-    if (submission === null || exercise === null) return <Typography>Loading exercise...</Typography>;
-    if (submission.type === 'waiting') return <Typography>Waiting for grading</Typography>;
-    if (exercise?.exercise_info === null) return <Typography>No exercise info?</Typography>;
+    if (submission === null || exercise === null) return <Typography>{t('loading-exercise')}</Typography>;
+    if (submission.type === 'waiting') return <Typography>{t('waiting-for-grading')}</Typography>;
+    if (exercise?.exercise_info === null) return <Typography>{t('no-exercise-info-available')}</Typography>;
 
     const base = (
         <>
             <Typography variant="h4">{parseName(submission.exercise.display_name)}</Typography>
-            <Typography>Submission {submission.submission_time.toLocaleString()}</Typography>
+            <Typography>
+                {t('submission')} {submission.submission_time.toLocaleString()}
+            </Typography>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }} alignItems="center">
                 <Button
                     variant="outlined"
@@ -71,7 +75,7 @@ const Submission = (): JSX.Element => {
                         navigate(`/exercise/${submission.exercise.id}`, { state: { showSubmissions: true } })
                     }
                 >
-                    Go back
+                    {t('go-back')}
                 </Button>
                 <PointsChip points={submission.grade} maxPoints={submission.exercise.max_points} />
             </Stack>
@@ -83,7 +87,7 @@ const Submission = (): JSX.Element => {
             <>
                 {base}
                 <Typography variant="h5" color="error">
-                    Submission rejected
+                    {t('submission-rejected')}
                 </Typography>
             </>
         );
@@ -92,7 +96,7 @@ const Submission = (): JSX.Element => {
             {base}
             {submission.type === 'questionnaire' ? (
                 <>
-                    <Typography variant="h5">Feedback:</Typography>
+                    <Typography variant="h5">{t('feedback:')}</Typography>
                     <FormExercise
                         exercise={exercise as ExerciseDataWithInfo}
                         answers={submission.submission_data as [string, string][]}
@@ -105,8 +109,8 @@ const Submission = (): JSX.Element => {
                 <>
                     <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                         <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
-                            <Tab label="Feedback" />
-                            <Tab label="Code" />
+                            <Tab label={t('feedback')} />
+                            <Tab label={t('code')} />
                         </Tabs>
                     </Box>
                     <TabPanel index={0} value={activeIndex}>
@@ -116,7 +120,7 @@ const Submission = (): JSX.Element => {
                     </TabPanel>
                     <TabPanel index={1} value={activeIndex}>
                         {codes === null ? (
-                            <Typography>Loading code...</Typography>
+                            <Typography>{t('loading-code')}</Typography>
                         ) : (
                             <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={codes} readOnly />
                         )}

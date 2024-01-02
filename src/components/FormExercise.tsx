@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 import axios, { AxiosResponse } from 'axios';
 import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import PointsChip from './PointsChip';
 import { LanguageContext } from '../app/StateProvider';
@@ -120,6 +121,7 @@ const FormExercise = ({
 
     const defaultValues = init(exercise, answers);
 
+    const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
     const [formValues, setFormValues] = useState<FormValues>(defaultValues.formValues);
     const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
@@ -311,7 +313,7 @@ const FormExercise = ({
         <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
             {validationErrors && (
                 <Alert variant="outlined" severity="error" sx={{ mb: 2 }}>
-                    <AlertTitle>Submission failed due to the following reasons:</AlertTitle>
+                    <AlertTitle>{t('submission-failed-due-to')}</AlertTitle>
                     {Object.entries(validationErrors).map(([key, error]) => (
                         <Typography variant="body2" key={`validation-${key}`}>
                             {portionTitles[key]}: {error}
@@ -365,7 +367,7 @@ const FormExercise = ({
                         </FormControl>
                     ),
                 )}
-                {!readOnly && <Button type="submit">Submit</Button>}
+                {!readOnly && <Button type="submit">{t('submit-form')}</Button>}
             </form>
         </Container>
     );

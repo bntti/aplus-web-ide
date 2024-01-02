@@ -18,6 +18,7 @@ import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
 import { useContext, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseDataWithInfo, FileSpec } from '../app/api/exerciseTypes';
@@ -54,6 +55,7 @@ const CodeEditor = ({
     if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
         throw new Error("Exercise that wasn't a file was passed to CodeEditor");
     }
+    const { t } = useTranslation();
     const { apiToken } = useContext(ApiTokenContext);
     const theme = useTheme();
 
@@ -169,10 +171,10 @@ const CodeEditor = ({
             {!readOnly && (
                 <Stack spacing={2} sx={{ mt: 2 }} direction="row" justifyContent="space-between">
                     <Button onClick={submitCode} variant="outlined">
-                        Submit
+                        {t('file-submit')}
                     </Button>
                     <FormControl variant="outlined" size="small">
-                        <InputLabel id="programming-language-select">Language</InputLabel>
+                        <InputLabel id="programming-language-select">{t('language')}</InputLabel>
                         <Select
                             sx={{ minWidth: 150 }}
                             id="programming-language-select"

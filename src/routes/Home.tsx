@@ -1,11 +1,13 @@
 import { Card, CardActionArea, CardContent, Divider, Grid, Typography } from '@mui/material';
 import { useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { UserContext } from '../app/StateProvider';
 
 const Home = (): JSX.Element => {
     const { user } = useContext(UserContext);
+    const { t } = useTranslation();
 
     return (
         <>
@@ -13,11 +15,11 @@ const Home = (): JSX.Element => {
             <Divider sx={{ mb: 2 }} />
 
             {user === null ? (
-                <Typography variant="h5">Not logged in</Typography>
+                <Typography variant="h5">{t('not-logged-in')}</Typography>
             ) : (
                 <>
                     <Typography variant="h5" sx={{ mb: 1 }}>
-                        My courses
+                        {t('my-courses')}
                     </Typography>
 
                     <Grid container spacing={10}>

@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { AxiosResponse } from 'axios';
 import { useCallback, useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
@@ -44,6 +45,7 @@ const Exercise = (): JSX.Element => {
     const { graderToken, setGraderToken } = useContext(GraderTokenContext);
     const { user } = useContext(UserContext);
     const { language } = useContext(LanguageContext);
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [exercise, setExercise] = useState<ExerciseData | null>(null);
@@ -155,9 +157,9 @@ const Exercise = (): JSX.Element => {
 
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
     if (exerciseId === undefined) return <Navigate replace to="/courses" />;
-    if (exercise !== null && !exercise.is_submittable) return <Typography>Exercise is not submittable?</Typography>;
+    if (exercise !== null && !exercise.is_submittable) throw new Error('Exercise is not submittable?');
     if (exercise === null || submitterStats === null || submissions === null || loading) {
-        return <Typography>Loading exercise...</Typography>;
+        return <Typography>{t('loading-exercise')}</Typography>;
     }
 
     return (
@@ -171,20 +173,24 @@ const Exercise = (): JSX.Element => {
             >
                 {numSubmissions > 0 ? (
                     <Typography>
-                        Submissions done {numSubmissions}/{exercise.max_submissions}
+                        {t('submissions-done')} {numSubmissions}/{exercise.max_submissions}
                     </Typography>
                 ) : (
-                    <Typography>Max submissions {exercise.max_submissions}</Typography>
+                    <Typography>
+                        {t('max-submissions')} {exercise.max_submissions}
+                    </Typography>
                 )}
                 {submitterStats.passed ? (
-                    <Typography color="success.main">Passed</Typography>
+                    <Typography color="success.main">{t('passed')}</Typography>
                 ) : (
-                    <Typography>Points required to pass {submitterStats.points_to_pass}</Typography>
+                    <Typography>
+                        {t('points-required-to-pass')} {submitterStats.points_to_pass}
+                    </Typography>
                 )}
             </Stack>
             <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
                 <Button variant="outlined" size="small" component={Link} to={`/course/${exercise.course.id}`}>
-                    Back to course
+                    {t('back-to-course')}
                 </Button>
                 <PointsChip
                     points={submitterStats.points}
@@ -195,21 +201,21 @@ const Exercise = (): JSX.Element => {
             </Stack>
             <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                 <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
-                    <Tab label="Edit code" />
-                    {templates !== null && <Tab value={2} label="Show templates" />}
-                    <Tab value={1} label="Submissions" />
+                    <Tab label={t('exercise')} />
+                    {templates !== null && <Tab value={2} label={t('show-templates')} />}
+                    <Tab value={1} label={t('submissions')} />
                 </Tabs>
             </Box>
 
             <TabPanel value={activeIndex} index={0}>
                 {numSubmissions >= exercise.max_submissions && (
                     <Alert variant="outlined" severity="info" sx={{ mb: 1 }}>
-                        All {exercise.max_submissions} submissions done.
+                        {t('all-submissions-done', { count: exercise.max_submissions })}
                     </Alert>
                 )}
 
                 {exercise.exercise_info === null ? (
-                    <Typography>Exercise submission type info unavailable</Typography>
+                    <Typography>{t('exercise-submission-type-info-unavailable')}</Typography>
                 ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
                     <CodeEditor
                         exercise={exercise as ExerciseDataWithInfo}
@@ -256,15 +262,15 @@ const Exercise = (): JSX.Element => {
 
             <TabPanel value={activeIndex} index={1}>
                 {submitterStats.submissions_with_points.length === 0 ? (
-                    <Typography>No submissions</Typography>
+                    <Typography>{t('no-submissions')}</Typography>
                 ) : (
                     <TableContainer component={Paper} sx={{ mt: 1 }}>
                         <Table component="div">
                             <TableHead component="div">
-                                <TableCell component="div">Submission #</TableCell>
-                                <TableCell component="div">Score</TableCell>
+                                <TableCell component="div">{t('submission-#')}</TableCell>
+                                <TableCell component="div">{t('points')}</TableCell>
                                 <TableCell component="div" align="right">
-                                    Submission time
+                                    {t('submission-time')}
                                 </TableCell>
                             </TableHead>
                             <TableBody component="div">

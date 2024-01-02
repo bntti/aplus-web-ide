@@ -16,6 +16,7 @@ import {
     useTheme,
 } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
@@ -26,6 +27,7 @@ const Course = (): JSX.Element => {
     const { courseId } = useParams();
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
+    const { t } = useTranslation();
     const theme = useTheme();
     const navigate = useNavigate();
 
@@ -60,7 +62,7 @@ const Course = (): JSX.Element => {
     };
 
     if (course === null || coursePoints === null || exerciseMaxSubmissions === null) {
-        return <Typography>Loading course...</Typography>;
+        return <Typography>{t('loading-course')}</Typography>;
     }
 
     const totalMaxPoints = coursePoints.modules.reduce((total, module) => total + module.max_points, 0);
@@ -68,7 +70,7 @@ const Course = (): JSX.Element => {
         <>
             <Typography variant="h2">{parseName(course.name)}</Typography>
             <Stack direction="row" spacing={1} sx={{ mb: 3.5 }}>
-                <Typography variant="h6">Total points</Typography>
+                <Typography variant="h6">{t('total-points')}</Typography>
                 <Chip
                     label={`${coursePoints.points} / ${totalMaxPoints}`}
                     variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
@@ -90,14 +92,16 @@ const Course = (): JSX.Element => {
                             divider={<Divider orientation="vertical" flexItem />}
                         >
                             {module.passed ? (
-                                <Typography color="success.main">Passed</Typography>
+                                <Typography color="success.main">{t('passed')}</Typography>
                             ) : module.points < module.points_to_pass ? (
-                                <Typography>Points required to pass {module.points_to_pass}</Typography>
+                                <Typography>
+                                    {t('points-required-to-pass')} {module.points_to_pass}
+                                </Typography>
                             ) : (
-                                <Typography>Some exercises not passed</Typography>
+                                <Typography>{t('some-exercises-not-passed')}</Typography>
                             )}
                             <Stack direction="row" spacing={1}>
-                                <Typography>Points</Typography>
+                                <Typography>{t('points')}</Typography>
                                 <PointsChip points={module.points} maxPoints={module.max_points} size="small" />
                             </Stack>
                         </Stack>
@@ -106,16 +110,16 @@ const Course = (): JSX.Element => {
                                 <TableHead component="div">
                                     <TableRow component="div">
                                         <TableCell component="div">
-                                            <Typography>Exercise</Typography>
+                                            <Typography>{t('exercise')}</Typography>
                                         </TableCell>
                                         <TableCell component="div" align="right">
-                                            <Typography>Passed</Typography>
+                                            <Typography>{t('passed')}</Typography>
                                         </TableCell>
                                         <TableCell component="div" align="right">
-                                            <Typography>Submissions</Typography>
+                                            <Typography>{t('submissions')}</Typography>
                                         </TableCell>
                                         <TableCell component="div" align="right">
-                                            <Typography>Points</Typography>
+                                            <Typography>{t('points')}</Typography>
                                         </TableCell>
                                     </TableRow>
                                 </TableHead>

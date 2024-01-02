@@ -1,5 +1,6 @@
 import { Button, Container, Paper, Typography } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
@@ -11,6 +12,7 @@ const Logout = (): JSX.Element => {
         if (key && key.startsWith('code')) unsaved = true;
     }
     const [needsConfirm, setNeedsConfirm] = useState<boolean>(unsaved);
+    const { t } = useTranslation();
     const { setApiToken } = useContext(ApiTokenContext);
     const { setUser } = useContext(UserContext);
     const { setGraderToken } = useContext(GraderTokenContext);
@@ -29,14 +31,14 @@ const Logout = (): JSX.Element => {
         return (
             <Container component={Paper} sx={{ pt: 2.5, pb: 3 }}>
                 <Typography variant="h6" sx={{ mb: 2 }}>
-                    You might have unsaved changes, are you sure you want to log out?
+                    {t('logout-confirm-unsaved')}
                 </Typography>
 
                 <Button onClick={() => setNeedsConfirm(false)} color="error" variant="outlined" sx={{ mb: 1, mr: 1 }}>
-                    Log out
+                    {t('log-out')}
                 </Button>
                 <Button onClick={() => navigate('/')} variant="outlined" sx={{ mb: 1 }}>
-                    Cancel
+                    {t('cancel')}
                 </Button>
             </Container>
         );
