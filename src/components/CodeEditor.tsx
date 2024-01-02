@@ -55,9 +55,9 @@ const CodeEditor = ({
     if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
         throw new Error("Exercise that wasn't a file was passed to CodeEditor");
     }
+    const theme = useTheme();
     const { t } = useTranslation();
     const { apiToken } = useContext(ApiTokenContext);
-    const theme = useTheme();
 
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
     let storageEmpty = true;

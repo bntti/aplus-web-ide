@@ -13,11 +13,12 @@ import PointsChip from '../components/PointsChip';
 import TabPanel from '../components/TabPanel';
 
 const Submission = (): JSX.Element => {
+    const navigate = useNavigate();
     const { submissionId } = useParams();
+    const { t } = useTranslation();
+
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
-    const { t } = useTranslation();
-    const navigate = useNavigate();
 
     const [codes, setCodes] = useState<string[] | null>(null);
     const [exercise, setExercise] = useState<ExerciseData | null>(null);

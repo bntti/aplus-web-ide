@@ -118,11 +118,11 @@ const FormExercise = ({
     if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
         throw new Error('Tried to pass file type form to FormExercise');
     }
-
     const defaultValues = init(exercise, answers);
 
     const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
+
     const [formValues, setFormValues] = useState<FormValues>(defaultValues.formValues);
     const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
 

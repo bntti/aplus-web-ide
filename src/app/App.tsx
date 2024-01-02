@@ -21,8 +21,8 @@ declare global {
 
 const RequireAuth = ({ children }: { children: JSX.Element }): JSX.Element => {
     const { apiToken, setApiToken } = useContext(ApiTokenContext);
-    const { user, setUser } = useContext(UserContext);
     const { graderToken, setGraderToken } = useContext(GraderTokenContext);
+    const { user, setUser } = useContext(UserContext);
 
     const storageApiToken = localStorage.getItem('apiToken');
     const storageUser = localStorage.getItem('user');

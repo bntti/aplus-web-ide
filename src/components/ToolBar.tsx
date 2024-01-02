@@ -10,10 +10,11 @@ import { ApiTokenContext, LanguageContext, ThemeContext, UserContext } from '../
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
     const { t, i18n } = useTranslation();
-    const { colorMode } = useContext(ThemeContext);
+
     const { apiToken } = useContext(ApiTokenContext);
-    const { user } = useContext(UserContext);
     const { language, setLanguage } = useContext(LanguageContext);
+    const { colorMode } = useContext(ThemeContext);
+    const { user } = useContext(UserContext);
 
     return (
         <AppBar position="static" sx={{ mb: 2.5 }}>

@@ -6,8 +6,8 @@ import { Link } from 'react-router-dom';
 import { UserContext } from '../app/StateProvider';
 
 const Home = (): JSX.Element => {
-    const { user } = useContext(UserContext);
     const { t } = useTranslation();
+    const { user } = useContext(UserContext);
 
     return (
         <>

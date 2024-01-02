@@ -7,12 +7,13 @@ import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StatePr
 import { getGraderToken, getUser } from '../app/api/login';
 
 const Login = (): JSX.Element => {
+    const navigate = useNavigate();
     const { state } = useLocation();
     const { t } = useTranslation();
+
     const { setApiToken } = useContext(ApiTokenContext);
-    const { setUser } = useContext(UserContext);
     const { setGraderToken } = useContext(GraderTokenContext);
-    const navigate = useNavigate();
+    const { setUser } = useContext(UserContext);
 
     const [invalidToken, setInvalidToken] = useState(false);
     const [newApiToken, setNewApiToken] = useState('');

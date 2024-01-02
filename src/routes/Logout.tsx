@@ -11,12 +11,15 @@ const Logout = (): JSX.Element => {
         const key = localStorage.key(i);
         if (key && key.startsWith('code')) unsaved = true;
     }
-    const [needsConfirm, setNeedsConfirm] = useState<boolean>(unsaved);
-    const { t } = useTranslation();
-    const { setApiToken } = useContext(ApiTokenContext);
-    const { setUser } = useContext(UserContext);
-    const { setGraderToken } = useContext(GraderTokenContext);
+
     const navigate = useNavigate();
+    const { t } = useTranslation();
+
+    const { setApiToken } = useContext(ApiTokenContext);
+    const { setGraderToken } = useContext(GraderTokenContext);
+    const { setUser } = useContext(UserContext);
+
+    const [needsConfirm, setNeedsConfirm] = useState<boolean>(unsaved);
 
     useEffect(() => {
         if (needsConfirm) return;

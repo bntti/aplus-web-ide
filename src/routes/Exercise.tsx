@@ -39,14 +39,15 @@ import SubmissionSnackbar, { SubmissionStatus } from '../components/SubmissionSn
 import TabPanel from '../components/TabPanel';
 
 const Exercise = (): JSX.Element => {
+    const navigate = useNavigate();
     const { state } = useLocation();
     const { exerciseId } = useParams();
+    const { t } = useTranslation();
+
     const { apiToken } = useContext(ApiTokenContext);
     const { graderToken, setGraderToken } = useContext(GraderTokenContext);
-    const { user } = useContext(UserContext);
     const { language } = useContext(LanguageContext);
-    const { t } = useTranslation();
-    const navigate = useNavigate();
+    const { user } = useContext(UserContext);
 
     const [exercise, setExercise] = useState<ExerciseData | null>(null);
     const [templates, setTemplates] = useState<string[] | null>(null);

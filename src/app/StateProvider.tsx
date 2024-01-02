@@ -10,6 +10,15 @@ type ApiTokenContext = {
 };
 export const ApiTokenContext = createContext<ApiTokenContext>({} as ApiTokenContext);
 
+// GraderToken
+export type GraderTokenN = string;
+export type GraderToken = GraderTokenN | null;
+type GraderTokenContext = {
+    graderToken: GraderToken;
+    setGraderToken: React.Dispatch<React.SetStateAction<GraderToken>>;
+};
+export const GraderTokenContext = createContext<GraderTokenContext>({} as GraderTokenContext);
+
 // Language
 type Language = 'finnish' | 'english';
 type LanguageContext = {
@@ -35,33 +44,22 @@ export type User = UserN | null;
 type UserContext = { user: User; setUser: React.Dispatch<React.SetStateAction<User>> };
 export const UserContext = createContext<UserContext>({} as UserContext);
 
-// GraderToken
-export type GraderTokenN = string;
-export type GraderToken = GraderTokenN | null;
-type GraderTokenContext = {
-    graderToken: GraderToken;
-    setGraderToken: React.Dispatch<React.SetStateAction<GraderToken>>;
-};
-export const GraderTokenContext = createContext<GraderTokenContext>({} as GraderTokenContext);
-
 // Theme
 type ThemeContext = { colorMode: { toggleTheme: () => void } };
 export const ThemeContext = createContext<ThemeContext>({} as ThemeContext);
 
 export const GlobalStateProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
     const [apiToken, setApiToken] = useState<ApiToken>(null);
+    const [graderToken, setGraderToken] = useState<GraderToken>(null);
     const [language, setLanguage] = useState<Language>('english');
     const [user, setUser] = useState<User>(null);
-    const [graderToken, setGraderToken] = useState<GraderToken>(null);
     return (
         <ApiTokenContext.Provider value={{ apiToken, setApiToken }}>
-            <LanguageContext.Provider value={{ language, setLanguage }}>
-                <UserContext.Provider value={{ user, setUser }}>
-                    <GraderTokenContext.Provider value={{ graderToken, setGraderToken }}>
-                        {children}
-                    </GraderTokenContext.Provider>
-                </UserContext.Provider>
-            </LanguageContext.Provider>
+            <GraderTokenContext.Provider value={{ graderToken, setGraderToken }}>
+                <LanguageContext.Provider value={{ language, setLanguage }}>
+                    <UserContext.Provider value={{ user, setUser }}>{children}</UserContext.Provider>
+                </LanguageContext.Provider>
+            </GraderTokenContext.Provider>
         </ApiTokenContext.Provider>
     );
 };

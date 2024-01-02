@@ -24,12 +24,13 @@ import { CourseData, CoursePoints, getCourse, getCoursePoints, getExercises } fr
 import PointsChip from '../components/PointsChip';
 
 const Course = (): JSX.Element => {
+    const navigate = useNavigate();
+    const theme = useTheme();
     const { courseId } = useParams();
+    const { t } = useTranslation();
+
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
-    const { t } = useTranslation();
-    const theme = useTheme();
-    const navigate = useNavigate();
 
     const [course, setCourse] = useState<CourseData | null>(null);
     const [coursePoints, setCoursePoints] = useState<CoursePoints | null>(null);
