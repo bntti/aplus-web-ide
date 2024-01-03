@@ -34,6 +34,7 @@ import {
     StaticSpec,
     TextSpec,
 } from '../app/api/exerciseTypes';
+import { translateI18n } from '../app/util';
 
 const NoButtonsTextField = styled(TextField)(() => ({
     '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
@@ -126,18 +127,7 @@ const FormExercise = ({
     const [formValues, setFormValues] = useState<FormValues>(defaultValues.formValues);
     const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
 
-    const i18n = exercise.exercise_info.form_i18n;
-    const translate = (value: string): string => {
-        if (!(value in i18n) || (!('en' in i18n[value]) && !('fi' in i18n[value]))) return value;
-
-        // Preferred language
-        if (language === 'english' && 'en' in i18n[value]) return i18n[value].en;
-        else if (language === 'finnish' && 'fi' in i18n[value]) return i18n[value].fi;
-
-        // Fallback to other language
-        if ('en' in i18n[value]) return i18n[value].en;
-        else return i18n[value].fi;
-    };
+    const translate = (value: string): string => translateI18n(value, exercise.exercise_info.form_i18n, language);
 
     const removeMargins = (value: string, error: boolean): string => {
         if (error) return value.replace(/<p/g, '<p style="margin:0;color:red"');

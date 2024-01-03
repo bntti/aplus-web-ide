@@ -2,8 +2,8 @@ import axios from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
-import { catcher } from './util';
 import { ApiTokenN } from '../StateProvider';
+import { apiCatcher } from '../util';
 
 const CourseDataSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -11,30 +11,31 @@ const CourseDataSchema = z.object({
 });
 export type CourseData = z.infer<typeof CourseDataSchema>;
 
-const CoursePointsSchema = z.object({
+const CourseModuleSchema = z.object({
+    name: z.string(),
+    max_points: z.number().int().nonnegative(),
+    points_to_pass: z.number().int().nonnegative(),
+    submission_count: z.number().int().nonnegative(),
     points: z.number().int().nonnegative(),
-    modules: z.array(
+    passed: z.boolean(),
+    exercises: z.array(
         z.object({
+            id: z.number().int().nonnegative(),
             name: z.string(),
             max_points: z.number().int().nonnegative(),
             points_to_pass: z.number().int().nonnegative(),
             submission_count: z.number().int().nonnegative(),
             points: z.number().int().nonnegative(),
             passed: z.boolean(),
-            exercises: z.array(
-                z.object({
-                    id: z.number().int().nonnegative(),
-                    name: z.string(),
-                    max_points: z.number().int().nonnegative(),
-                    points_to_pass: z.number().int().nonnegative(),
-                    submission_count: z.number().int().nonnegative(),
-                    points: z.number().int().nonnegative(),
-                    passed: z.boolean(),
-                }),
-            ),
         }),
     ),
 });
+
+const CoursePointsSchema = z.object({
+    points: z.number().int().nonnegative(),
+    modules: z.array(CourseModuleSchema),
+});
+export type CourseModuleData = z.infer<typeof CourseModuleSchema>;
 export type CoursePoints = z.infer<typeof CoursePointsSchema>;
 
 // TODO: Has fields next and previous, might be necessary on bigger courses?
@@ -56,7 +57,7 @@ export const getCourse: CourseFunction<CourseData> = async (apiToken, courseId, 
         .get(`/api/v2/courses/${courseId}`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
 
     return CourseDataSchema.parse(courseResponse.data);
 };
@@ -66,7 +67,7 @@ export const getExercises: CourseFunction<Exercises> = async (apiToken, courseId
         .get(`/api/v2/courses/${courseId}/exercises`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
 
     return ExercisesSchema.parse(exerciseResponse.data);
 };
@@ -76,7 +77,7 @@ export const getCoursePoints: CourseFunction<CoursePoints> = async (apiToken, co
         .get(`/api/v2/courses/${courseId}/points/me`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
 
     return CoursePointsSchema.parse(pointsResponse.data);
 };

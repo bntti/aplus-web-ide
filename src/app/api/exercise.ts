@@ -3,8 +3,8 @@ import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
 import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
-import { catcher } from './util';
 import { ApiTokenN, GraderToken } from '../StateProvider';
+import { apiCatcher } from '../util';
 
 const SubmitterStatsSchema = z.object({
     submissions_with_points: z.array(
@@ -39,7 +39,7 @@ export const getSubmitterStats: ExerciseFunction<SubmitterStats> = async (apiTok
         .get(`/api/v2/exercises/${exerciseId}/submitter_stats/me`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
     return SubmitterStatsSchema.parse(submitterStatsResponse.data);
 };
 
@@ -48,7 +48,7 @@ export const getSubmissions: ExerciseFunction<Submissions> = async (apiToken, ex
         .get(`/api/v2/exercises/${exerciseId}/submissions/me`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
     return SubmissionsSchema.parse(submissionsResponse.data);
 };
 
@@ -58,7 +58,7 @@ export const getExercise: ExerciseFunction<ExerciseData> = async (apiToken, exer
             headers: { Authorization: `Token ${apiToken}` },
         })
 
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
     return ExerciseDataSchema.parse(exerciseResponse.data);
 };
 

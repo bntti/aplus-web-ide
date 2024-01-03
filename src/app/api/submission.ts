@@ -2,8 +2,8 @@ import axios from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
-import { catcher } from './util';
 import { ApiTokenN } from '../StateProvider';
+import { apiCatcher } from '../util';
 
 const SubmissionBaseSchema = z.object({
     id: z.number().int().nonnegative(),
@@ -65,7 +65,7 @@ export const getSubmission = async (
         .get(`/api/v2/submissions/${submissionId}`, {
             headers: { Authorization: `Token ${apiToken}` },
         })
-        .catch((error) => catcher(navigate, error));
+        .catch((error) => apiCatcher(navigate, error));
     const submission = ApiSubmissionSchema.parse(submissionResponse.data) as unknown as SubmissionData;
 
     if (submission.status === 'waiting') submission.type = 'waiting';
@@ -88,7 +88,7 @@ export const getSubmissionFiles = async (
             .get(`/api/v2/submissions/${submissionId}/files/${files[i].id}`, {
                 headers: { Authorization: `Token ${apiToken}` },
             })
-            .catch((error) => catcher(navigate, error));
+            .catch((error) => apiCatcher(navigate, error));
         newCodes.push(codeResponse.data);
     }
     return newCodes;

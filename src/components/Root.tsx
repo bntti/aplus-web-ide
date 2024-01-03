@@ -17,15 +17,7 @@ const Root = (): JSX.Element => {
         [],
     );
 
-    const theme = useMemo(
-        () =>
-            createTheme({
-                palette: {
-                    mode,
-                },
-            }),
-        [mode],
-    );
+    const theme = useMemo(() => createTheme({ palette: { mode } }), [mode]);
 
     return (
         <ThemeContext.Provider value={{ colorMode }}>
