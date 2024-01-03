@@ -61,6 +61,7 @@ const Exercise = (): JSX.Element => {
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('hidden');
+    const [loadingSubmissionResponse, setLoadingSubmissionResponse] = useState<boolean>(false);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
@@ -139,17 +140,22 @@ const Exercise = (): JSX.Element => {
         const loadSubmission = async (): Promise<void> => {
             const newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
             if (newLatestSubmission.type === 'waiting') {
-                setTimeout(loadSubmission, 500); // TODO: better delay & show loading text / animation
+                setTimeout(loadSubmission, 500); // TODO: long polling etc
                 return;
             } else if (newLatestSubmission.type === 'questionnaire') {
                 setSubmissionStatus('success');
                 setLatestSubmission(newLatestSubmission);
                 setValidationErrors(null);
+                setLoadingSubmissionResponse(false);
+                getSubmissionsData().catch(console.error);
             } else if (newLatestSubmission.type === 'rejected') {
                 setSubmissionStatus('rejected');
                 setValidationErrors(newLatestSubmission.feedback_json.validation_errors);
+                setLoadingSubmissionResponse(false);
+                getSubmissionsData().catch(console.error);
             }
         };
+        setLoadingSubmissionResponse(true);
         setSubmissionStatus('loading');
         getSubmissionsData().catch(console.error);
         loadSubmission().catch(console.error);
@@ -239,6 +245,11 @@ const Exercise = (): JSX.Element => {
                     />
                 ) : (
                     <>
+                        {loadingSubmissionResponse && (
+                            <Alert severity="info" sx={{ mb: 1 }}>
+                                {t('submission-loading')}
+                            </Alert>
+                        )}
                         <SubmissionSnackbar status={submissionStatus} setStatus={setSubmissionStatus} />
                         {latestSubmission && latestSubmission.type === 'questionnaire' ? (
                             <FormExercise
@@ -249,7 +260,7 @@ const Exercise = (): JSX.Element => {
                                 feedback={latestSubmission.feedback_json.error_fields}
                                 points={latestSubmission.feedback_json.fields_points}
                                 validationErrors={validationErrors}
-                                readOnly={numSubmissions >= exercise.max_submissions}
+                                readOnly={loadingSubmissionResponse || numSubmissions >= exercise.max_submissions}
                             />
                         ) : (
                             <FormExercise
@@ -257,7 +268,7 @@ const Exercise = (): JSX.Element => {
                                 apiToken={apiToken}
                                 callback={formCallback}
                                 validationErrors={validationErrors}
-                                readOnly={numSubmissions >= exercise.max_submissions}
+                                readOnly={loadingSubmissionResponse || numSubmissions >= exercise.max_submissions}
                             />
                         )}
                     </>

@@ -12,7 +12,7 @@ const SubmissionSnackbar = ({ status, setStatus }: Props): JSX.Element => {
 
     const severityMap: { [key: string]: AlertColor } = { loading: 'info', success: 'success', rejected: 'error' };
     const textMap: { [key: string]: string } = {
-        loading: t('loading'),
+        loading: t('submission-loading'),
         success: t('submission-success'),
         rejected: t('submission-rejected!'),
     };
