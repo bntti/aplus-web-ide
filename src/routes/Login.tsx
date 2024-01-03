@@ -34,6 +34,11 @@ const Login = (): JSX.Element => {
 
     const addApiToken = (event: React.SyntheticEvent): void => {
         event.preventDefault();
+        if (newApiToken.trim().length === 0) {
+            setInvalidToken(true);
+            return;
+        }
+
         loadUser(newApiToken).catch((error) => {
             if (error?.response?.data?.detail === 'Invalid token.') {
                 setInvalidToken(true);
