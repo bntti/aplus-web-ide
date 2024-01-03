@@ -16,7 +16,7 @@ const SubmissionBaseSchema = z.object({
     }),
 });
 
-const WaitingSubmissionSchema = z.object({ status: z.literal('waiting') });
+const WaitingSubmissionSchema = SubmissionBaseSchema.extend({ status: z.literal('waiting') });
 const RejectedSubmissionSchema = SubmissionBaseSchema.extend({
     status: z.literal('rejected'),
     feedback_json: z.object({ validation_errors: z.record(z.array(z.string())) }),
@@ -24,7 +24,6 @@ const RejectedSubmissionSchema = SubmissionBaseSchema.extend({
 const FileSubmissionSchema = SubmissionBaseSchema.extend({
     status: z.literal('ready'),
     files: z.array(z.object({ id: z.number().int().nonnegative() })).nonempty(),
-    // submission_data: z.null(), Might be needed to recognize type
     feedback: z.string(),
 });
 const QuestionnaireSubmissionSchema = SubmissionBaseSchema.extend({

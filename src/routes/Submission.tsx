@@ -31,7 +31,6 @@ const Submission = (): JSX.Element => {
             const newSubmission = await getSubmission(apiToken, submissionId, navigate);
             setSubmission(newSubmission);
             if (newSubmission.type === 'waiting') {
-                // TODO: test if this works
                 setTimeout(getData, 5000);
                 return;
             }
@@ -58,11 +57,10 @@ const Submission = (): JSX.Element => {
         }
     });
 
-    if (submission === null || exercise === null) return <Typography>{t('loading-exercise')}</Typography>;
-    if (submission.type === 'waiting') return <Typography>{t('waiting-for-grading')}</Typography>;
+    if (submission === null) return <Typography>{t('loading-submission')}</Typography>;
     if (exercise?.exercise_info === null) return <Typography>{t('no-exercise-info-available')}</Typography>;
 
-    const base = (
+    const Base = (
         <>
             <Typography variant="h4">{parseName(submission.exercise.display_name)}</Typography>
             <Typography>
@@ -78,23 +76,38 @@ const Submission = (): JSX.Element => {
                 >
                     {t('go-back')}
                 </Button>
-                <PointsChip points={submission.grade} maxPoints={submission.exercise.max_points} />
+                <PointsChip
+                    points={submission.grade}
+                    maxPoints={submission.exercise.max_points}
+                    disabled={submission.type === 'waiting'}
+                    gray={submission.type === 'waiting'}
+                />
             </Stack>
         </>
     );
 
+    if (submission.type === 'waiting') {
+        return (
+            <>
+                {Base}
+                <Typography variant="h5">{t('waiting-for-grading')}</Typography>
+            </>
+        );
+    }
     if (submission.type === 'rejected')
         return (
             <>
-                {base}
+                {Base}
                 <Typography variant="h5" color="error">
                     {t('submission-rejected')}
                 </Typography>
             </>
         );
+
+    if (exercise === null) return <Typography>{t('loading-submission')}</Typography>;
     return (
         <>
-            {base}
+            {Base}
             {submission.type === 'questionnaire' ? (
                 <>
                     <Typography variant="h5">{t('feedback:')}</Typography>
