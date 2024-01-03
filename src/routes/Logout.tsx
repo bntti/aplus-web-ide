@@ -1,16 +1,19 @@
 import { Button, Container, Paper, Typography } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 
 const Logout = (): JSX.Element => {
+    const { state } = useLocation();
+
     let unsaved = false;
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key && key.startsWith('code')) unsaved = true;
     }
+    if (state && state.force) unsaved = false;
 
     const navigate = useNavigate();
     const { t } = useTranslation();

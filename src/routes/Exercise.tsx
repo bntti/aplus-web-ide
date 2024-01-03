@@ -57,6 +57,7 @@ const Exercise = (): JSX.Element => {
     const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
     const [validationErrors, setValidationErrors] = useState<{ [key: string]: string[] } | null>(null);
 
+    const [graderRetry, setGraderRetry] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
     const [submissionStatus, setSubmissionStatus] = useState<SubmissionStatus>('hidden');
@@ -94,11 +95,19 @@ const Exercise = (): JSX.Element => {
                         throw new Error(`Unknown error with grader ${error.response.data}`);
                     }
 
+                    if (graderRetry) {
+                        // Should never happen
+                        navigate('/logout', { state: { force: true } });
+                        throw new Error('Failed to fetch templates with updated grader token, redirecting to logout');
+                    }
+
                     const newGraderToken = await getGraderToken(apiToken, user.enrolled_courses); // TODO: handle possible infinite loop
                     setGraderToken(newGraderToken);
+                    setGraderRetry(true);
                     localStorage.setItem('graderToken', newGraderToken);
-                    throw new Error('Failed to fetch templates: grader token expired');
+                    throw new Error('Failed to fetch templates: grader token expired, trying again with a new one');
                 });
+                setGraderRetry(false);
 
                 if (newTemplates.length !== newExercise.exercise_info.form_spec.length) {
                     throw new Error('There are missing templates'); // Assuming only file portions in form_spec
@@ -110,7 +119,7 @@ const Exercise = (): JSX.Element => {
             }
         };
         getData().catch(console.error);
-    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken]);
+    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken, graderRetry]);
 
     useEffect(() => {
         if (state && state.showSubmissions && activeIndex !== 1) {
