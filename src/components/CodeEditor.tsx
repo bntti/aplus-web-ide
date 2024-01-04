@@ -179,7 +179,7 @@ const CodeEditor = ({
                             sx={{ minWidth: 150 }}
                             id="programming-language-select"
                             value={languages[tabIndex]}
-                            label="Language"
+                            label={t('language')}
                             onChange={(event: SelectChangeEvent) => {
                                 languages[tabIndex] = event.target.value;
                                 setCurrentLanguage(event.target.value);
