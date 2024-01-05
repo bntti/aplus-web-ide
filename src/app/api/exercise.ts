@@ -3,7 +3,7 @@ import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
 import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
-import { ApiTokenN, GraderToken } from '../StateProvider';
+import { ApiToken, ContextGraderToken } from '../StateProvider';
 import { apiCatcher } from '../util';
 
 const SubmitterStatsSchema = z.object({
@@ -32,7 +32,7 @@ const SubmissionsSchema = z.object({
 });
 export type Submissions = z.infer<typeof SubmissionsSchema>;
 
-type ExerciseFunction<T> = (apiToken: ApiTokenN, exerciseId: string | number, navigate: NavigateFunction) => Promise<T>;
+type ExerciseFunction<T> = (apiToken: ApiToken, exerciseId: string | number, navigate: NavigateFunction) => Promise<T>;
 
 export const getSubmitterStats: ExerciseFunction<SubmitterStats> = async (apiToken, exerciseId, navigate) => {
     const submitterStatsResponse = await axios
@@ -62,7 +62,7 @@ export const getExercise: ExerciseFunction<ExerciseData> = async (apiToken, exer
     return ExerciseDataSchema.parse(exerciseResponse.data);
 };
 
-export const getTemplates = async (graderToken: GraderToken, templateNames: string[]): Promise<string[]> => {
+export const getTemplates = async (graderToken: ContextGraderToken, templateNames: string[]): Promise<string[]> => {
     if (!graderToken) throw new Error('Invalid courseId / apiToken');
 
     const templates = [];

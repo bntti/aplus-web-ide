@@ -1,5 +1,4 @@
-import { Typography } from '@mui/material';
-import { useContext, useEffect } from 'react';
+import { useContext } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from './StateProvider';
@@ -9,47 +8,21 @@ import Exercise from '../routes/Exercise';
 import Home from '../routes/Home';
 import Login from '../routes/Login';
 import Logout from '../routes/Logout';
+import Profile from '../routes/Profile';
 import Submission from '../routes/Submission';
 
 declare global {
     interface Window {
-        MathJax?: {
-            typeset: () => void;
-        };
+        MathJax?: { typeset: () => void };
     }
 }
 
-const RequireAuth = ({ children }: { children: JSX.Element }): JSX.Element => {
-    const { apiToken, setApiToken } = useContext(ApiTokenContext);
-    const { graderToken, setGraderToken } = useContext(GraderTokenContext);
-    const { user, setUser } = useContext(UserContext);
+const RequireAuth = ({ outlet }: { outlet: JSX.Element }): JSX.Element => {
+    const { apiToken } = useContext(ApiTokenContext);
+    const { graderToken } = useContext(GraderTokenContext);
+    const { user } = useContext(UserContext);
 
-    const storageApiToken = localStorage.getItem('apiToken');
-    const storageUser = localStorage.getItem('user');
-    const storageGraderToken = localStorage.getItem('graderToken');
-
-    useEffect(() => {
-        if (apiToken && user && graderToken) return; // Race condition? (shouldn't be a problem)
-        if (storageApiToken && storageUser && storageGraderToken) {
-            setApiToken(storageApiToken);
-            setUser(JSON.parse(storageUser));
-            setGraderToken(storageGraderToken);
-        }
-    }, [
-        apiToken,
-        user,
-        graderToken,
-        storageApiToken,
-        storageUser,
-        storageGraderToken,
-        setApiToken,
-        setUser,
-        setGraderToken,
-    ]);
-
-    if (apiToken && user && graderToken) return children;
-    if (storageApiToken && storageUser && storageGraderToken) return <Typography>Loading</Typography>;
-
+    if (apiToken && user && graderToken) return outlet;
     return <Navigate replace to="/login" state={{ from: location.pathname }} />;
 };
 
@@ -65,28 +38,20 @@ const router = createBrowserRouter([
             { path: 'login', element: <Login /> },
             { path: 'logout', element: <Logout /> },
             {
+                path: 'profile',
+                element: <RequireAuth outlet={<Profile />} />,
+            },
+            {
                 path: 'course/:courseId?',
-                element: (
-                    <RequireAuth>
-                        <Course />
-                    </RequireAuth>
-                ),
+                element: <RequireAuth outlet={<Course />} />,
             },
             {
                 path: 'exercise/:exerciseId?',
-                element: (
-                    <RequireAuth>
-                        <Exercise />
-                    </RequireAuth>
-                ),
+                element: <RequireAuth outlet={<Exercise />} />,
             },
             {
                 path: 'submission/:submissionId?',
-                element: (
-                    <RequireAuth>
-                        <Submission />
-                    </RequireAuth>
-                ),
+                element: <RequireAuth outlet={<Submission />} />,
             },
         ],
     },

@@ -1,34 +1,33 @@
 import { Container, CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Outlet } from 'react-router-dom';
 
-import { ThemeContext } from '../app/StateProvider';
+import { LanguageContext, ThemeContext } from '../app/StateProvider';
 import ToolBar from '../components/ToolBar';
 
 const Root = (): JSX.Element => {
-    const [mode, setMode] = useState<'light' | 'dark'>('light');
+    const { i18n } = useTranslation();
+    const { theme } = useContext(ThemeContext);
+    const { language } = useContext(LanguageContext);
 
-    const colorMode = useMemo(
-        () => ({
-            toggleTheme: () => {
-                setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
-            },
-        }),
-        [],
-    );
-
-    const theme = useMemo(() => createTheme({ palette: { mode } }), [mode]);
+    useEffect(() => {
+        const languageShort = language.slice(0, 2);
+        if (languageShort !== i18n.language) {
+            i18n.changeLanguage(languageShort).catch(console.error);
+            console.log(`Changed to ${languageShort}`);
+        }
+    }, [i18n, language]);
+    const MUITheme = useMemo(() => createTheme({ palette: { mode: theme } }), [theme]);
 
     return (
-        <ThemeContext.Provider value={{ colorMode }}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline enableColorScheme />
-                <ToolBar />
-                <Container sx={{ paddingBottom: '50px' }}>
-                    <Outlet />
-                </Container>
-            </ThemeProvider>
-        </ThemeContext.Provider>
+        <ThemeProvider theme={MUITheme}>
+            <CssBaseline enableColorScheme />
+            <ToolBar />
+            <Container sx={{ paddingBottom: '50px' }}>
+                <Outlet />
+            </Container>
+        </ThemeProvider>
     );
 };
 

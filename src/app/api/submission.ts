@@ -2,7 +2,7 @@ import axios from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
-import { ApiTokenN } from '../StateProvider';
+import { ApiToken } from '../StateProvider';
 import { apiCatcher } from '../util';
 
 const SubmissionBaseSchema = z.object({
@@ -57,7 +57,7 @@ const SubmissionSchema = z.discriminatedUnion('type', [
 export type SubmissionData = z.infer<typeof SubmissionSchema>;
 
 export const getSubmission = async (
-    apiToken: ApiTokenN,
+    apiToken: ApiToken,
     submissionId: string | number,
     navigate: NavigateFunction,
 ): Promise<SubmissionData> => {
@@ -77,7 +77,7 @@ export const getSubmission = async (
 };
 
 export const getSubmissionFiles = async (
-    apiToken: ApiTokenN,
+    apiToken: ApiToken,
     submissionId: string | number,
     files: { id: number }[],
     navigate: NavigateFunction,

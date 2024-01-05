@@ -25,9 +25,6 @@ const Login = (): JSX.Element => {
         setApiToken(apiToken);
         setUser(user);
         setGraderToken(graderToken);
-        localStorage.setItem('apiToken', apiToken);
-        localStorage.setItem('user', JSON.stringify(user));
-        localStorage.setItem('graderToken', graderToken);
         if (state && state.from) navigate(state.from);
         else navigate('/');
     };
@@ -51,7 +48,7 @@ const Login = (): JSX.Element => {
     return (
         <Container component={Paper} sx={{ pt: 2.5, pb: 3 }}>
             <Typography variant="h5" sx={{ mb: 2 }}>
-                {t('login')}
+                {t('log-in')}
             </Typography>
             <form onSubmit={addApiToken}>
                 <TextField
@@ -66,7 +63,7 @@ const Login = (): JSX.Element => {
                     }}
                 />
                 <Button variant="contained" type="submit" sx={{ mt: 1 }}>
-                    {t('login')}
+                    {t('log-in')}
                 </Button>
             </form>
         </Container>

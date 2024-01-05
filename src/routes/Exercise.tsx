@@ -83,7 +83,6 @@ const Exercise = (): JSX.Element => {
                     const newGraderToken = await getGraderToken(apiToken, user.enrolled_courses); // TODO: handle possible infinite loop
                     setGraderToken(newGraderToken);
                     setGraderRetry(true);
-                    localStorage.setItem('graderToken', newGraderToken);
                     throw new Error('Failed to fetch templates: grader token expired, trying again with a new one');
                 });
                 setGraderRetry(false);

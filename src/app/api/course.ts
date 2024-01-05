@@ -2,7 +2,7 @@ import axios from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
-import { ApiTokenN } from '../StateProvider';
+import { ApiToken } from '../StateProvider';
 import { apiCatcher } from '../util';
 
 const CourseDataSchema = z.object({
@@ -50,7 +50,7 @@ const ExercisesSchema = z.object({
 });
 type Exercises = z.infer<typeof ExercisesSchema>;
 
-type CourseFunction<T> = (apiToken: ApiTokenN, courseId: string | number, navigate: NavigateFunction) => Promise<T>;
+type CourseFunction<T> = (apiToken: ApiToken, courseId: string | number, navigate: NavigateFunction) => Promise<T>;
 
 export const getCourse: CourseFunction<CourseData> = async (apiToken, courseId, navigate) => {
     const courseResponse = await axios

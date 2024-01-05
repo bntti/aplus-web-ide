@@ -1,20 +1,32 @@
-import { Brightness3, Brightness7, Home, Logout } from '@mui/icons-material';
-import TranslateIcon from '@mui/icons-material/Translate';
-import { AppBar, Button, IconButton, Toolbar, Typography, useTheme } from '@mui/material';
-import { useContext } from 'react';
+import { AccountBox, Brightness3, Brightness7, Home, Logout, Person } from '@mui/icons-material';
+import {
+    AppBar,
+    Button,
+    IconButton,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    Toolbar,
+    useTheme,
+} from '@mui/material';
+import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-import { ApiTokenContext, LanguageContext, ThemeContext, UserContext } from '../app/StateProvider';
+import { ApiTokenContext, ThemeContext, UserContext } from '../app/StateProvider';
 
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
-    const { t, i18n } = useTranslation();
+    const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const { apiToken } = useContext(ApiTokenContext);
-    const { language, setLanguage } = useContext(LanguageContext);
-    const { colorMode } = useContext(ThemeContext);
+    const { setTheme } = useContext(ThemeContext);
     const { user } = useContext(UserContext);
+
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const [anchorWidth, setAnchorWidth] = useState<number | null>(null);
 
     return (
         <AppBar position="static" sx={{ mb: 2.5 }}>
@@ -24,33 +36,61 @@ const ToolBar = (): JSX.Element => {
                 </IconButton>
 
                 <IconButton
-                    sx={{ marginLeft: 'auto' }}
-                    onClick={() => {
-                        setLanguage(language === 'finnish' ? 'english' : 'finnish');
-                        i18n.changeLanguage(language === 'finnish' ? 'en' : 'fi').catch(console.error);
-                    }}
+                    onClick={() => setTheme((oldTheme) => (oldTheme === 'light' ? 'dark' : 'light'))}
                     color="inherit"
                     size="large"
+                    sx={{ ml: 'auto' }}
                 >
-                    <TranslateIcon />
-                </IconButton>
-                <IconButton onClick={colorMode.toggleTheme} color="inherit" size="large">
                     {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness3 />}
                 </IconButton>
 
                 {apiToken === null ? (
                     <Button color="inherit" component={Link} to="/login">
-                        {t('login')}
+                        {t('log-in')}
                     </Button>
                 ) : (
                     <>
-                        <Typography color="inherit">
+                        <Button
+                            size="large"
+                            color="inherit"
+                            startIcon={<Person />}
+                            onClick={(event) => {
+                                setAnchorEl(event.currentTarget);
+                                setAnchorWidth(event.currentTarget.offsetWidth);
+                            }}
+                        >
                             {user ? <em>{user.full_name}</em> : <em>Loading user...</em>}
-                        </Typography>
-
-                        <IconButton color="inherit" component={Link} to="/logout" size="large">
-                            <Logout />
-                        </IconButton>
+                        </Button>
+                        <Menu
+                            anchorEl={anchorEl}
+                            keepMounted
+                            open={Boolean(anchorEl)}
+                            onClose={() => setAnchorEl(null)}
+                        >
+                            <MenuItem
+                                onClick={() => {
+                                    setAnchorEl(null);
+                                    navigate('/profile');
+                                }}
+                                sx={{ width: anchorWidth ?? '100%' }}
+                            >
+                                <ListItemIcon>
+                                    <AccountBox />
+                                </ListItemIcon>
+                                <ListItemText>{t('profile')}</ListItemText>
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    setAnchorEl(null);
+                                    navigate('/logout');
+                                }}
+                            >
+                                <ListItemIcon>
+                                    <Logout />
+                                </ListItemIcon>
+                                <ListItemText>{t('log-out')}</ListItemText>
+                            </MenuItem>
+                        </Menu>
                     </>
                 )}
             </Toolbar>

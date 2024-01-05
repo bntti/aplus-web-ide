@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 
 export const apiCatcher = (navigate: NavigateFunction, error: AxiosError): never => {
@@ -33,4 +34,31 @@ export const translateI18n = (
     // Fallback to other language
     if (i18nValue?.en) return i18nValue.en;
     else return i18nValue.fi as string;
+};
+
+export const usePersistantState = <T>(
+    key: string,
+    initialValue: T,
+    schema: { parse: (value: object | string) => T },
+): [T, React.Dispatch<React.SetStateAction<T>>] => {
+    let initValue = initialValue;
+    try {
+        const value = localStorage.getItem(key);
+        if (value) {
+            initValue = schema.parse(JSON.parse(value));
+        }
+    } catch (e) {
+        console.error(e);
+        localStorage.removeItem(key);
+    }
+    const [state, setInternalState] = useState<T>(initValue);
+
+    type StateFunction = (prevState: T) => T;
+    const setState: React.Dispatch<React.SetStateAction<T>> = (value: T | StateFunction): void => {
+        const actualValue = typeof value === 'function' ? (value as StateFunction)(state) : value;
+        localStorage.setItem(key, JSON.stringify(actualValue));
+        setInternalState(actualValue);
+    };
+
+    return [state, setState];
 };

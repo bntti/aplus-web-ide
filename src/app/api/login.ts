@@ -1,14 +1,14 @@
 import axios from 'axios';
 
-import { ApiTokenN, UserN, UserSchema } from '../StateProvider';
+import { ApiToken, User, UserSchema } from '../StateProvider';
 
-export const getUser = async (apiToken: ApiTokenN): Promise<UserN> => {
+export const getUser = async (apiToken: ApiToken): Promise<User> => {
     const userResponse = await axios.get('/api/v2/users/me', { headers: { Authorization: `Token ${apiToken}` } });
 
     return UserSchema.parse(userResponse.data);
 };
 
-export const getGraderToken = async (apiToken: ApiTokenN, courses: { id: number }[]): Promise<string> => {
+export const getGraderToken = async (apiToken: ApiToken, courses: { id: number }[]): Promise<string> => {
     const graderTokenResponse = await axios.post(
         '/api/v2/get-token',
         {
