@@ -69,32 +69,8 @@ const baseDarkTheme = EditorView.theme({
 const editorLightTheme = githubLight;
 const editorDarkTheme = githubDark;
 
-type Props =
-    | {
-          exercise: ExerciseDataWithInfo;
-          callback: () => void;
-          codes?: null | string[];
-          readOnly?: false;
-      }
-    | {
-          exercise: ExerciseDataWithInfo;
-          callback?: null | (() => void);
-          codes: null | string[];
-          readOnly: true;
-      };
-
-const CodeEditor = ({
-    exercise,
-    callback = null,
-    codes: defaultCodes = null,
-    readOnly = false,
-}: Props): JSX.Element => {
-    if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
-        throw new Error("Exercise that wasn't a file was passed to CodeEditor");
-    }
-    const theme = useTheme();
-    const { t } = useTranslation();
-    const { apiToken } = useContext(ApiTokenContext);
+const getInitCodes = (exercise: ExerciseDataWithInfo, readOnly: boolean, defaultCodes: string[] | null): string[] => {
+    if (readOnly) return defaultCodes as string[];
 
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
     let storageEmpty = true;
@@ -107,7 +83,39 @@ const CodeEditor = ({
         else if (defaultCodes) storageCodes.push(defaultCodes[i]);
         else storageCodes.push('');
     }
-    const [codes, setCodes] = useState<string[]>(storageEmpty ? defaultCodes || storageCodes : storageCodes);
+    return storageEmpty ? defaultCodes || storageCodes : storageCodes;
+};
+
+type Props =
+    | {
+          exercise: ExerciseDataWithInfo;
+          callback: () => void;
+          codes?: null | string[];
+          readOnly?: false;
+      }
+    | {
+          exercise: ExerciseDataWithInfo;
+          callback?: null | (() => void);
+          codes: string[];
+          readOnly: true;
+      };
+
+const CodeEditor = ({
+    exercise,
+    callback = null,
+    codes: defaultCodes = null,
+    readOnly = false,
+}: Props): JSX.Element => {
+    if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
+        throw new Error("Exercise that wasn't a file was passed to CodeEditor");
+    }
+    const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
+
+    const theme = useTheme();
+    const { t } = useTranslation();
+    const { apiToken } = useContext(ApiTokenContext);
+
+    const [codes, setCodes] = useState<string[]>(getInitCodes(exercise, readOnly, defaultCodes));
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [languages, setLanguages] = useState<string[]>(guessLanguages(portions));
     const [currentLanguage, setCurrentLanguage] = useState<string>(guessLanguages(portions)[0]);
