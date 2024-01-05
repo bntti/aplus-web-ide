@@ -2,8 +2,10 @@ import { javascript } from '@codemirror/lang-javascript';
 import { python } from '@codemirror/lang-python';
 import { LanguageSupport, StreamLanguage } from '@codemirror/language';
 import { scala } from '@codemirror/legacy-modes/mode/clike';
+import { FileDownload, FileUpload } from '@mui/icons-material';
 import {
     Button,
+    ButtonGroup,
     FormControl,
     InputLabel,
     MenuItem,
@@ -12,6 +14,7 @@ import {
     Stack,
     Tab,
     Tabs,
+    styled,
     useTheme,
 } from '@mui/material';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
@@ -20,6 +23,7 @@ import axios from 'axios';
 import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import UploadFileConfirmDialog from './UploadFileConfirmDialog';
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseDataWithInfo, FileSpec } from '../app/api/exerciseTypes';
 
@@ -31,6 +35,39 @@ const guessLanguages = (portions: FileSpec[]): string[] => {
         return 'text';
     });
 };
+
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
+
+const baseLightTheme = EditorView.theme({
+    '&.cm-editor': {
+        border: '1px solid rgba(0, 0, 0, 0.12)',
+    },
+    '&.cm-editor.cm-focused': {
+        border: '1px solid rgba(0, 0, 0, 0.26)',
+        outline: 'none',
+    },
+});
+const baseDarkTheme = EditorView.theme({
+    '&.cm-editor': {
+        border: '1px solid rgba(255, 255, 255, 0.08)',
+    },
+    '&.cm-editor.cm-focused': {
+        border: '1px solid rgba(255, 255, 255, 0.16)',
+        outline: 'none',
+    },
+});
+const editorLightTheme = githubLight;
+const editorDarkTheme = githubDark;
 
 type Props =
     | {
@@ -74,6 +111,8 @@ const CodeEditor = ({
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [languages, setLanguages] = useState<string[]>(guessLanguages(portions));
     const [currentLanguage, setCurrentLanguage] = useState<string>(guessLanguages(portions)[0]);
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+    const [uploadConfirm, setUploadConfirm] = useState<boolean>(false);
 
     const submitCode = (): void => {
         const formData = new FormData();
@@ -95,26 +134,27 @@ const CodeEditor = ({
         return [];
     };
 
-    const baseLightTheme = EditorView.theme({
-        '&.cm-editor': {
-            border: '1px solid rgba(0, 0, 0, 0.12)',
-        },
-        '&.cm-editor.cm-focused': {
-            border: '1px solid rgba(0, 0, 0, 0.26)',
-            outline: 'none',
-        },
-    });
-    const baseDarkTheme = EditorView.theme({
-        '&.cm-editor': {
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-        },
-        '&.cm-editor.cm-focused': {
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            outline: 'none',
-        },
-    });
-    const editorLightTheme = githubLight;
-    const editorDarkTheme = githubDark;
+    const downloadCodeAsFile = (): void => {
+        // TODO: check that works for all browsers and older firefox
+        const element = document.createElement('a');
+        const file = new Blob([codes[tabIndex]], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = portions[tabIndex].title;
+        element.click();
+    };
+    const applyUploadedCode = (): void => {
+        if (!uploadFile) throw new Error('Uploaded code is null');
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const fileContent = e.target?.result as string;
+            localStorage.setItem(`code-${exercise.id}-${tabIndex}`, fileContent);
+            const newCodes = [...codes];
+            newCodes[tabIndex] = fileContent;
+            setCodes(newCodes);
+        };
+        reader.readAsText(uploadFile);
+    };
 
     return (
         <>
@@ -168,11 +208,39 @@ const CodeEditor = ({
                     ...getLanguage(currentLanguage),
                 ]}
             />
-            {!readOnly && (
+
+            <UploadFileConfirmDialog
+                file={uploadFile}
+                callback={applyUploadedCode}
+                open={uploadConfirm}
+                handleClose={() => setUploadConfirm(false)}
+            />
+            {readOnly ? (
+                <Button sx={{ mt: 1 }} variant="outlined" onClick={downloadCodeAsFile} startIcon={<FileDownload />}>
+                    {t('download-code')}
+                </Button>
+            ) : (
                 <Stack spacing={2} sx={{ mt: 2 }} direction="row" justifyContent="space-between">
                     <Button onClick={submitCode} variant="outlined">
                         {t('file-submit')}
                     </Button>
+                    <ButtonGroup>
+                        <Button variant="outlined" onClick={downloadCodeAsFile} startIcon={<FileDownload />}>
+                            {t('download-code')}
+                        </Button>
+                        <Button component="label" variant="outlined" startIcon={<FileUpload />}>
+                            {t('upload-code')}
+                            <VisuallyHiddenInput
+                                type="file"
+                                onChange={(event) => {
+                                    if (event.target.files && event.target.files.length === 1) {
+                                        setUploadFile(event.target.files[0]);
+                                        setUploadConfirm(true);
+                                    }
+                                }}
+                            />
+                        </Button>
+                    </ButtonGroup>
                     <FormControl variant="outlined" size="small">
                         <InputLabel id="programming-language-select">{t('language')}</InputLabel>
                         <Select
