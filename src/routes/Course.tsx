@@ -24,8 +24,8 @@ const Course = (): JSX.Element => {
     useEffect(() => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || courseId === undefined) return;
-            setCourse(await getCourse(apiToken, courseId, navigate));
-            setCoursePoints(await getCoursePoints(apiToken, courseId, navigate));
+            const newCourse = await getCourse(apiToken, courseId, navigate);
+            const newCoursePoints = await getCoursePoints(apiToken, courseId, navigate);
 
             const exercises = await getExercises(apiToken, courseId, navigate);
             const maxSubmissions: { [key: number]: number } = {};
@@ -34,6 +34,9 @@ const Course = (): JSX.Element => {
                     maxSubmissions[exercise.id] = exercise.max_submissions;
                 }
             }
+
+            setCourse(newCourse);
+            setCoursePoints(newCoursePoints);
             setExerciseMaxSubmissions(maxSubmissions);
         };
         getData().catch(console.error);

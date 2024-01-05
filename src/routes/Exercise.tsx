@@ -13,7 +13,6 @@ import {
     getTemplates,
 } from '../app/api/exercise';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
-import { getGraderToken } from '../app/api/login';
 import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
 import { parseTitle } from '../app/util';
 import CodeEditor from '../components/CodeEditor';
@@ -40,23 +39,34 @@ const Exercise = (): JSX.Element => {
     const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
     const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
 
-    const [graderRetry, setGraderRetry] = useState<boolean>(false);
     const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
+        const newSubmissions = await getSubmissions(apiToken, exerciseId, navigate);
         const newSubmitterStats = await getSubmitterStats(apiToken, exerciseId, navigate);
-        setSubmissions(await getSubmissions(apiToken, exerciseId, navigate));
+        let newLatestSubmission = null;
+        let newLatestSubmissionFiles = null;
+
+        if (newSubmitterStats.submissions_with_points.length > 0) {
+            const submissionId = newSubmitterStats.submissions_with_points[0].id;
+            newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
+
+            if (newLatestSubmission.type === 'file') {
+                newLatestSubmissionFiles = await getSubmissionFiles(
+                    apiToken,
+                    submissionId,
+                    newLatestSubmission.files,
+                    navigate,
+                );
+            }
+        }
+
+        setSubmissions(newSubmissions);
         setSubmitterStats(newSubmitterStats);
-
-        if (newSubmitterStats.submissions_with_points.length === 0) return;
-        const submissionId = newSubmitterStats.submissions_with_points[0].id;
-        const newLatestSubmission = await getSubmission(apiToken, submissionId, navigate);
-        setLatestSubmission(newLatestSubmission);
-
-        if (newLatestSubmission.type !== 'file') return;
-        setLatestSubmissionFiles(await getSubmissionFiles(apiToken, submissionId, newLatestSubmission.files, navigate));
+        if (newLatestSubmission) setLatestSubmission(newLatestSubmission);
+        if (newLatestSubmissionFiles) setLatestSubmissionFiles(newLatestSubmissionFiles);
     }, [apiToken, exerciseId, navigate]);
 
     useEffect(() => {
@@ -70,22 +80,14 @@ const Exercise = (): JSX.Element => {
 
             if (newExercise.templates && newExercise.exercise_info) {
                 const templateNames = newExercise.templates.split(' ');
-                const newTemplates = await getTemplates(graderToken, templateNames).catch(async (error) => {
-                    if (error.response.data !== 'Expired token') {
-                        throw new Error(`Unknown error with grader ${error.response.data}`);
-                    }
-
-                    if (graderRetry) {
-                        navigate('/logout', { state: { force: true } });
-                        throw new Error('Failed to fetch templates with updated grader token, redirecting to logout');
-                    }
-
-                    const newGraderToken = await getGraderToken(apiToken, user.enrolled_courses); // TODO: handle possible infinite loop
-                    setGraderToken(newGraderToken);
-                    setGraderRetry(true);
-                    throw new Error('Failed to fetch templates: grader token expired, trying again with a new one');
-                });
-                setGraderRetry(false);
+                const newTemplates = await getTemplates(
+                    graderToken,
+                    apiToken,
+                    user,
+                    templateNames,
+                    navigate,
+                    setGraderToken,
+                );
 
                 if (newTemplates.length !== newExercise.exercise_info.form_spec.length) {
                     throw new Error('There are missing templates'); // Assuming only file portions in form_spec
@@ -95,7 +97,7 @@ const Exercise = (): JSX.Element => {
             setLoading(false);
         };
         getData().catch(console.error);
-    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken, graderRetry]);
+    }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken]);
 
     useEffect(() => {
         if (state && state.showSubmissions && activeIndex !== 1) {
@@ -108,11 +110,8 @@ const Exercise = (): JSX.Element => {
         getSubmissionsData().catch(console.error);
         setActiveIndex(1);
     };
-    const formCallback = (newLatestSubmission?: SubmissionData): void => {
+    const formCallback = (): void => {
         getSubmissionsData().catch(console.error);
-        if (newLatestSubmission?.type === 'questionnaire') {
-            setLatestSubmission(newLatestSubmission);
-        }
     };
 
     const numSubmissions = submitterStats ? submitterStats.submission_count : 0;

@@ -15,7 +15,7 @@ type Props = {
     numSubmissions: number;
     exercise: ExerciseData;
 
-    formCallback: (response?: SubmissionData) => void;
+    formCallback: () => void;
     latestSubmission: SubmissionData | null;
 
     codeCallback: () => void;
@@ -62,7 +62,7 @@ const ExerciseTab = ({
                 setSubmissionStatus('rejected');
                 setValidationErrors(newLatestSubmission.feedback_json.validation_errors);
             }
-            parentFormCallBack(newLatestSubmission);
+            parentFormCallBack();
             setLoadingSubmissionResponse(false);
         };
         setLoadingSubmissionResponse(true);

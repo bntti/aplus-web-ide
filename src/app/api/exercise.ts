@@ -1,9 +1,10 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 import { z } from 'zod';
 
 import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
-import { ApiToken, ContextGraderToken } from '../StateProvider';
+import { getGraderToken } from './login';
+import { ApiToken, ContextGraderToken, User } from '../StateProvider';
 import { apiCatcher } from '../util';
 
 const SubmitterStatsSchema = z.object({
@@ -62,16 +63,43 @@ export const getExercise: ExerciseFunction<ExerciseData> = async (apiToken, exer
     return ExerciseDataSchema.parse(exerciseResponse.data);
 };
 
-export const getTemplates = async (graderToken: ContextGraderToken, templateNames: string[]): Promise<string[]> => {
+export const getTemplates = async (
+    graderToken: ContextGraderToken,
+    apiToken: string,
+    user: User,
+    templateNames: string[],
+    navigate: NavigateFunction,
+    setGraderToken: (value: string) => void,
+    isRetry = false,
+): Promise<string[]> => {
     if (!graderToken) throw new Error('Invalid courseId / apiToken');
 
     const templates = [];
     for (const template of templateNames) {
-        const templateResponse = await axios.get(
-            template.replace('http://grader:8080', '/grader'), // TODO: change in prod?
-            { headers: { Authorization: `Bearer ${graderToken}` } },
-        );
-        templates.push(templateResponse.data);
+        let retry = false;
+        const templateResponse = await axios
+            .get(
+                template.replace('http://grader:8080', '/grader'), // TODO: change in prod?
+                { headers: { Authorization: `Bearer ${graderToken}` } },
+            )
+            .catch(async (error) => {
+                if (error.response.data !== 'Expired token') {
+                    throw new Error(`Unknown error with grader ${error.response.data}`);
+                }
+                if (isRetry) {
+                    navigate('/logout', { state: { force: true } });
+                    throw new Error('Failed to fetch templates with updated grader token, redirecting to logout');
+                }
+                retry = true;
+                console.warn('Failed to fetch templates: grader token expired, trying again with a new one');
+            });
+        if (retry) {
+            const newGraderToken = await getGraderToken(apiToken, user.enrolled_courses);
+            setGraderToken(newGraderToken);
+
+            return await getTemplates(newGraderToken, apiToken, user, templateNames, navigate, setGraderToken, true);
+        }
+        templates.push((templateResponse as AxiosResponse).data);
     }
     return templates;
 };

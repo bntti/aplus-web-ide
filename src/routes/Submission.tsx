@@ -27,15 +27,24 @@ const Submission = (): JSX.Element => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || submissionId === undefined) return;
             const newSubmission = await getSubmission(apiToken, submissionId, navigate);
-            setSubmission(newSubmission);
+            let newExercise = null;
+            let newCodes = null;
+
             if (newSubmission.type === 'waiting') {
+                setSubmission(newSubmission);
                 setTimeout(getData, 5000);
                 return;
             }
-            setExercise(await getExercise(apiToken, newSubmission.exercise.id, navigate));
 
-            if (newSubmission.type !== 'file') return;
-            setCodes(await getSubmissionFiles(apiToken, submissionId, newSubmission.files, navigate));
+            newExercise = await getExercise(apiToken, newSubmission.exercise.id, navigate);
+            newCodes = null;
+            if (newSubmission.type === 'file') {
+                newCodes = await getSubmissionFiles(apiToken, submissionId, newSubmission.files, navigate);
+            }
+
+            setSubmission(newSubmission);
+            setExercise(newExercise);
+            if (newCodes) setCodes(newCodes);
         };
 
         getData().catch(console.error);

@@ -19,12 +19,12 @@ const Login = (): JSX.Element => {
     const [newApiToken, setNewApiToken] = useState('');
 
     const loadUser = async (apiToken: string): Promise<void> => {
-        const user = await getUser(apiToken);
-        const graderToken = await getGraderToken(apiToken, user.enrolled_courses);
+        const newUser = await getUser(apiToken);
+        const newGraderToken = await getGraderToken(apiToken, newUser.enrolled_courses);
 
         setApiToken(apiToken);
-        setUser(user);
-        setGraderToken(graderToken);
+        setUser(newUser);
+        setGraderToken(newGraderToken);
         if (state && state.from) navigate(state.from);
         else navigate('/');
     };
@@ -37,11 +37,8 @@ const Login = (): JSX.Element => {
         }
 
         loadUser(newApiToken).catch((error) => {
-            if (error?.response?.data?.detail === 'Invalid token.') {
-                setInvalidToken(true);
-            } else {
-                throw error;
-            }
+            if (error?.response?.data?.detail === 'Invalid token.') setInvalidToken(true);
+            else throw error;
         });
     };
 

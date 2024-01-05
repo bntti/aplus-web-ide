@@ -5,24 +5,26 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 
-const Logout = (): JSX.Element => {
-    const { state } = useLocation();
+const getNeedsConfirm = (state: { force?: boolean }): boolean => {
+    if (state && state.force) return false;
 
-    let unsaved = false;
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith('code')) unsaved = true;
+        if (key && key.startsWith('code')) return true;
     }
-    if (state && state.force) unsaved = false;
+    return false;
+};
 
+const Logout = (): JSX.Element => {
     const navigate = useNavigate();
+    const { state } = useLocation();
     const { t } = useTranslation();
 
     const { setApiToken } = useContext(ApiTokenContext);
     const { setGraderToken } = useContext(GraderTokenContext);
     const { setUser } = useContext(UserContext);
 
-    const [needsConfirm, setNeedsConfirm] = useState<boolean>(unsaved);
+    const [needsConfirm, setNeedsConfirm] = useState<boolean>(getNeedsConfirm(state));
 
     useEffect(() => {
         if (needsConfirm) return;
