@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
 import { getGraderToken } from './login';
-import { ApiToken, ContextGraderToken, User } from '../StateProvider';
+import { ApiToken, GraderToken, User } from '../StateProvider';
 import { apiCatcher } from '../util';
 
 const SubmitterStatsSchema = z.object({
@@ -64,7 +64,7 @@ export const getExercise: ExerciseFunction<ExerciseData> = async (apiToken, exer
 };
 
 export const getTemplates = async (
-    graderToken: ContextGraderToken,
+    graderToken: GraderToken,
     apiToken: string,
     user: User,
     templateNames: string[],

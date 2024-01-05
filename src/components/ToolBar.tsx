@@ -14,7 +14,8 @@ import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { ApiTokenContext, ThemeContext, UserContext } from '../app/StateProvider';
+import { ThemeContext } from './Root';
+import { ApiTokenContext, UserContext } from '../app/StateProvider';
 
 const ToolBar = (): JSX.Element => {
     const theme = useTheme();
@@ -22,7 +23,7 @@ const ToolBar = (): JSX.Element => {
     const { t } = useTranslation();
 
     const { apiToken } = useContext(ApiTokenContext);
-    const { setTheme } = useContext(ThemeContext);
+    const { colorMode } = useContext(ThemeContext);
     const { user } = useContext(UserContext);
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
@@ -35,12 +36,7 @@ const ToolBar = (): JSX.Element => {
                     <Home />
                 </IconButton>
 
-                <IconButton
-                    onClick={() => setTheme((oldTheme) => (oldTheme === 'light' ? 'dark' : 'light'))}
-                    color="inherit"
-                    size="large"
-                    sx={{ ml: 'auto' }}
-                >
+                <IconButton onClick={colorMode.toggleTheme} color="inherit" size="large" sx={{ ml: 'auto' }}>
                     {theme.palette.mode === 'dark' ? <Brightness7 /> : <Brightness3 />}
                 </IconButton>
 
