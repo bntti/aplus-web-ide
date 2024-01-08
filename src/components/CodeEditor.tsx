@@ -20,7 +20,7 @@ import {
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
 import axios from 'axios';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import UploadFileConfirmDialog from './UploadFileConfirmDialog';
@@ -70,7 +70,7 @@ const editorLightTheme = githubLight;
 const editorDarkTheme = githubDark;
 
 const getInitCodes = (exercise: ExerciseDataWithInfo, readOnly: boolean, defaultCodes: string[] | null): string[] => {
-    if (readOnly) return defaultCodes as string[];
+    if (readOnly) return [...(defaultCodes as string[])];
 
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
     let storageEmpty = true;
@@ -83,7 +83,7 @@ const getInitCodes = (exercise: ExerciseDataWithInfo, readOnly: boolean, default
         else if (defaultCodes) storageCodes.push(defaultCodes[i]);
         else storageCodes.push('');
     }
-    return storageEmpty ? defaultCodes || storageCodes : storageCodes;
+    return storageEmpty ? [...(defaultCodes as string[])] || storageCodes : storageCodes;
 };
 
 type Props =
@@ -121,6 +121,15 @@ const CodeEditor = ({
     const [currentLanguage, setCurrentLanguage] = useState<string>(guessLanguages(portions)[0]);
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const [uploadConfirm, setUploadConfirm] = useState<boolean>(false);
+    const [oldReadOnly, setOldReadOnly] = useState<boolean>(readOnly);
+
+    useEffect(() => {
+        // Force update when readonly changes (show templates)
+        if (oldReadOnly !== readOnly) {
+            setOldReadOnly(readOnly);
+            setCodes(getInitCodes(exercise, readOnly, defaultCodes));
+        }
+    }, [codes, defaultCodes, exercise, oldReadOnly, readOnly]);
 
     const submitCode = (): void => {
         const formData = new FormData();
@@ -176,7 +185,8 @@ const CodeEditor = ({
                     setCurrentLanguage(languages[value]);
                 }}
                 sx={{
-                    borderRadius: 2,
+                    mt: 1,
+                    borderRadius: 1,
                     borderBottomLeftRadius: 0,
                     borderBottomRightRadius: 0,
                     border:

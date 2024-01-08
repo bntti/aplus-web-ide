@@ -10,7 +10,6 @@ import {
     FormHelperText,
     FormLabel,
     MenuItem,
-    Paper,
     Radio,
     RadioGroup,
     Select,
@@ -300,7 +299,7 @@ const FormExercise = ({
     }
 
     return (
-        <Container component={Paper} sx={{ pt: 2, pb: 2 }}>
+        <Container>
             {validationErrors && (
                 <Alert variant="outlined" severity="error" sx={{ mb: 2 }}>
                     <AlertTitle>{t('submission-failed-due-to')}</AlertTitle>
@@ -312,7 +311,7 @@ const FormExercise = ({
                 </Alert>
             )}
             <form onSubmit={handleSubmit}>
-                {portions.map((portion) =>
+                {portions.map((portion, index) =>
                     portion.type === 'static' ? (
                         portion.description && (
                             <div
@@ -322,7 +321,7 @@ const FormExercise = ({
                         )
                     ) : (
                         <FormControl
-                            sx={{ mb: 3, display: 'block' }}
+                            sx={{ mb: index === portions.length - 1 ? 0 : 3, display: 'block' }}
                             key={portion.key}
                             error={!!validationErrors && portion.key in validationErrors}
                         >
@@ -357,7 +356,11 @@ const FormExercise = ({
                         </FormControl>
                     ),
                 )}
-                {!readOnly && <Button type="submit">{t('submit-form')}</Button>}
+                {!readOnly && (
+                    <Button sx={{ pl: 0, mt: 1, mb: 0.5 }} type="submit">
+                        {t('submit-form')}
+                    </Button>
+                )}
             </form>
         </Container>
     );

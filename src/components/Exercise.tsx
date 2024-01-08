@@ -1,24 +1,19 @@
-import { Box, Button, Divider, Stack, Tab, Tabs, Typography } from '@mui/material';
+import { Button, Divider, ListItemText, Menu, MenuItem, Paper, Stack, Typography } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
+import ExerciseContent from './ExerciseContent';
 import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
 import { getExercise, getSubmissions, getSubmitterStats, getTemplates } from '../app/api/exercise';
-import { ExerciseData, ExerciseDataWithInfo, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
+import { ExerciseData, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
 import { getSubmission, getSubmissionFiles } from '../app/api/submission';
 import { SubmissionData } from '../app/api/submissionTypes';
 import { parseTitle } from '../app/util';
-import CodeEditor from '../components/CodeEditor';
-import ExerciseTab from '../components/ExerciseTab';
 import PointsChip from '../components/PointsChip';
-import SubmissionsTab from '../components/SubmissionsTab';
-import TabPanel from '../components/TabPanel';
 
-const Exercise = (): JSX.Element => {
+const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
     const navigate = useNavigate();
-    const { state } = useLocation();
-    const { exerciseId } = useParams();
     const { t } = useTranslation();
 
     const { apiToken } = useContext(ApiTokenContext);
@@ -32,9 +27,10 @@ const Exercise = (): JSX.Element => {
     const [submissions, setSubmissions] = useState<Submissions | null>(null);
     const [latestSubmission, setLatestSubmission] = useState<SubmissionData | null>(null);
     const [latestSubmissionFiles, setLatestSubmissionFiles] = useState<string[] | null>(null);
-
-    const [activeIndex, setActiveIndex] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
+
+    const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+    const [showTemplates, setShowTemplates] = useState<boolean>(false);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
@@ -93,16 +89,8 @@ const Exercise = (): JSX.Element => {
         getData().catch(console.error);
     }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken]);
 
-    useEffect(() => {
-        if (state && state.showSubmissions && activeIndex !== 1) {
-            setActiveIndex(1);
-            state.showSubmissions = false;
-        }
-    }, [state, activeIndex]);
-
     const codeCallback = (): void => {
         getSubmissionsData().catch(console.error);
-        setActiveIndex(1);
     };
     const formCallback = (): void => {
         getSubmissionsData().catch(console.error);
@@ -118,23 +106,37 @@ const Exercise = (): JSX.Element => {
     }
 
     return (
-        <>
-            <Typography variant="h4">{parseTitle(exercise.display_name, language)}</Typography>
+        <Paper sx={{ p: 1, my: 2 }}>
             <Stack
                 direction="row"
                 spacing={2}
                 alignItems="center"
                 divider={<Divider orientation="vertical" flexItem />}
             >
-                {numSubmissions > 0 ? (
-                    <Typography>
+                <>
+                    <Button onClick={(event) => setAnchorEl(event.currentTarget)}>
                         {t('submissions-done')} {numSubmissions}/{exercise.max_submissions}
-                    </Typography>
-                ) : (
-                    <Typography>
-                        {t('max-submissions')} {exercise.max_submissions}
-                    </Typography>
+                    </Button>
+                    <Menu anchorEl={anchorEl} open={anchorEl !== null} onClose={() => setAnchorEl(null)}>
+                        {submissions.results.length === 0 && <MenuItem>{t('no-submissions-yet')}</MenuItem>}
+                        {submissions.results.map((submission, index) => (
+                            <MenuItem key={submission.id} onClick={() => console.log(submission.id)}>
+                                <ListItemText sx={{ mr: 1 }}>#{numSubmissions - index}</ListItemText>
+                                <Typography sx={{ mr: 1 }} variant="body2" color="text.secondary">
+                                    {submission.submission_time.toLocaleString()}
+                                </Typography>
+                                <PointsChip points={submission.grade} maxPoints={exercise.max_points} size="small" />
+                            </MenuItem>
+                        ))}
+                    </Menu>
+                </>
+
+                {templates !== null && (
+                    <Button onClick={() => setShowTemplates(!showTemplates)}>
+                        {showTemplates ? t('show-code') : t('show-templates')}
+                    </Button>
                 )}
+
                 {submitterStats.passed ? (
                     <Typography color="success.main">{t('passed')}</Typography>
                 ) : (
@@ -142,53 +144,32 @@ const Exercise = (): JSX.Element => {
                         {t('points-required-to-pass')} {submitterStats.points_to_pass}
                     </Typography>
                 )}
+                <div>
+                    <Typography sx={{ display: 'inline', mr: 1 }}>{t('points')}</Typography>
+                    <PointsChip
+                        points={submitterStats.points}
+                        maxPoints={exercise.max_points}
+                        gray={numSubmissions === 0}
+                        size="small"
+                    />
+                </div>
             </Stack>
-            <Stack direction="row" spacing={2} sx={{ mt: 1, mb: 2 }}>
-                <Button variant="outlined" size="small" component={Link} to={`/course/${exercise.course.id}`}>
-                    {t('back-to-course')}
-                </Button>
-                <PointsChip
-                    points={submitterStats.points}
-                    maxPoints={exercise.max_points}
-                    gray={numSubmissions === 0}
-                    sx={{ mt: 0.5 }}
-                />
-            </Stack>
-            <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={activeIndex} onChange={(_, value) => setActiveIndex(value)}>
-                    <Tab label={t('exercise')} />
-                    {templates !== null && <Tab value={2} label={t('show-templates')} />}
-                    <Tab value={1} label={t('submissions')} />
-                </Tabs>
-            </Box>
+            <Divider sx={{ mt: 1, mb: 2 }} />
+            <Typography variant="h5" sx={{ ml: 0.5 }}>
+                {parseTitle(exercise.display_name, language)}
+            </Typography>
 
-            <TabPanel value={activeIndex} index={0}>
-                <ExerciseTab
-                    numSubmissions={numSubmissions}
-                    exercise={exercise}
-                    formCallback={formCallback}
-                    latestSubmission={latestSubmission}
-                    codeCallback={codeCallback}
-                    templates={templates}
-                    latestSubmissionFiles={latestSubmissionFiles}
-                />
-            </TabPanel>
-
-            {templates !== null && (
-                <TabPanel value={activeIndex} index={2}>
-                    <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={templates} readOnly />
-                </TabPanel>
-            )}
-
-            <TabPanel value={activeIndex} index={1}>
-                <SubmissionsTab
-                    numSubmissions={numSubmissions}
-                    numWithPoints={submitterStats.submissions_with_points.length}
-                    maxPoints={exercise.max_points}
-                    submissions={submissions}
-                />
-            </TabPanel>
-        </>
+            <ExerciseContent
+                numSubmissions={numSubmissions}
+                exercise={exercise}
+                formCallback={formCallback}
+                latestSubmission={latestSubmission}
+                codeCallback={codeCallback}
+                templates={templates}
+                latestSubmissionFiles={latestSubmissionFiles}
+                showTemplates={showTemplates}
+            />
+        </Paper>
     );
 };
 

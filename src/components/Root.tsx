@@ -20,10 +20,7 @@ const Root = (): JSX.Element => {
     // Handle language updates
     useEffect(() => {
         const languageShort = language.slice(0, 2);
-        if (languageShort !== i18n.language) {
-            i18n.changeLanguage(languageShort).catch(console.error);
-            console.log(`Changed to ${languageShort}`);
-        }
+        if (languageShort !== i18n.language) i18n.changeLanguage(languageShort).catch(console.error);
     }, [i18n, language]);
 
     // Handle theme updates

@@ -4,13 +4,13 @@ import { useContext, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import CodeEditor from './CodeEditor';
+import FormExercise from './FormExercise';
+import SubmissionSnackbar, { SubmissionStatus } from './SubmissionSnackbar';
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
 import { getSubmission } from '../app/api/submission';
 import { SubmissionData } from '../app/api/submissionTypes';
-import CodeEditor from '../components/CodeEditor';
-import FormExercise from '../components/FormExercise';
-import SubmissionSnackbar, { SubmissionStatus } from '../components/SubmissionSnackbar';
 
 type Props = {
     numSubmissions: number;
@@ -22,9 +22,10 @@ type Props = {
     codeCallback: () => void;
     templates: string[] | null;
     latestSubmissionFiles: string[] | null;
+    showTemplates: boolean;
 };
 
-const ExerciseTab = ({
+const ExerciseContent = ({
     numSubmissions,
     exercise,
 
@@ -34,6 +35,7 @@ const ExerciseTab = ({
     codeCallback,
     templates,
     latestSubmissionFiles,
+    showTemplates = false,
 }: Props): JSX.Element => {
     const navigate = useNavigate();
     const { t } = useTranslation();
@@ -84,16 +86,20 @@ const ExerciseTab = ({
             {exercise.exercise_info === null ? (
                 <Typography>{t('exercise-submission-type-info-unavailable')}</Typography>
             ) : exercise.exercise_info.form_spec[0].type === 'file' ? (
-                <CodeEditor
-                    exercise={exercise as ExerciseDataWithInfo}
-                    callback={codeCallback}
-                    codes={
-                        latestSubmissionFiles ??
-                        templates ??
-                        (Array(exercise.exercise_info.form_spec.length).fill('') as string[])
-                    }
-                    readOnly={numSubmissions >= exercise.max_submissions}
-                />
+                showTemplates ? (
+                    <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={templates as string[]} readOnly />
+                ) : (
+                    <CodeEditor
+                        exercise={exercise as ExerciseDataWithInfo}
+                        callback={codeCallback}
+                        codes={
+                            latestSubmissionFiles ??
+                            templates ??
+                            (Array(exercise.exercise_info.form_spec.length).fill('') as string[])
+                        }
+                        readOnly={numSubmissions >= exercise.max_submissions}
+                    />
+                )
             ) : (
                 <>
                     {loadingSubmissionResponse && (
@@ -128,4 +134,4 @@ const ExerciseTab = ({
     );
 };
 
-export default ExerciseTab;
+export default ExerciseContent;

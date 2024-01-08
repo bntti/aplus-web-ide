@@ -7,7 +7,6 @@ import Root from '../components/Root';
 import Course from '../routes/Course';
 import CoursePage from '../routes/CoursePage';
 import CoursePoints from '../routes/CoursePoints';
-import Exercise from '../routes/Exercise';
 import Home from '../routes/Home';
 import Login from '../routes/Login';
 import Logout from '../routes/Logout';
@@ -66,10 +65,6 @@ const router = createBrowserRouter([
                         element: <RequireAuth outlet={<CoursePage />} />,
                     },
                 ],
-            },
-            {
-                path: 'exercise/:exerciseId?',
-                element: <RequireAuth outlet={<Exercise />} />,
             },
             {
                 path: 'submission/:submissionId?',
