@@ -6,7 +6,7 @@ import CodeEditor from './CodeEditor';
 import FormExercise from './FormExercise';
 import TabPanel from './TabPanel';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
-import { SubmissionData } from '../app/api/submission';
+import { SubmissionData } from '../app/api/submissionTypes';
 
 type Props = { submission: SubmissionData; exercise: ExerciseData | null; codes: string[] | null };
 

@@ -53,5 +53,3 @@ const Root = (): JSX.Element => {
 };
 
 export default Root;
-// const setMode: (value: SetStateAction<"light" | "dark">) => void
-// const setMode: (value: SetStateAction<"light" | "dark">) => void

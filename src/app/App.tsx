@@ -2,8 +2,11 @@ import { useContext } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from './StateProvider';
+import CourseRoot from '../components/CourseRoot';
 import Root from '../components/Root';
 import Course from '../routes/Course';
+import CoursePage from '../routes/CoursePage';
+import CoursePoints from '../routes/CoursePoints';
 import Exercise from '../routes/Exercise';
 import Home from '../routes/Home';
 import Login from '../routes/Login';
@@ -32,7 +35,7 @@ const router = createBrowserRouter([
         element: <Root />,
         children: [
             {
-                path: '/',
+                path: '',
                 element: <Home />,
             },
             { path: 'login', element: <Login /> },
@@ -43,7 +46,26 @@ const router = createBrowserRouter([
             },
             {
                 path: 'course/:courseId?',
-                element: <RequireAuth outlet={<Course />} />,
+                element: <CourseRoot />,
+                children: [
+                    {
+                        path: '',
+                        element: <RequireAuth outlet={<Course />} />,
+                    },
+
+                    {
+                        path: 'points',
+                        element: <RequireAuth outlet={<CoursePoints />} />,
+                    },
+                    {
+                        path: ':parentChapterId?',
+                        element: <RequireAuth outlet={<CoursePage />} />,
+                    },
+                    {
+                        path: ':parentChapterId?/:chapterId',
+                        element: <RequireAuth outlet={<CoursePage />} />,
+                    },
+                ],
             },
             {
                 path: 'exercise/:exerciseId?',

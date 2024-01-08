@@ -4,16 +4,10 @@ import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
-import {
-    Submissions,
-    SubmitterStats,
-    getExercise,
-    getSubmissions,
-    getSubmitterStats,
-    getTemplates,
-} from '../app/api/exercise';
-import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
-import { SubmissionData, getSubmission, getSubmissionFiles } from '../app/api/submission';
+import { getExercise, getSubmissions, getSubmitterStats, getTemplates } from '../app/api/exercise';
+import { ExerciseData, ExerciseDataWithInfo, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
+import { getSubmission, getSubmissionFiles } from '../app/api/submission';
+import { SubmissionData } from '../app/api/submissionTypes';
 import { parseTitle } from '../app/util';
 import CodeEditor from '../components/CodeEditor';
 import ExerciseTab from '../components/ExerciseTab';
@@ -71,7 +65,7 @@ const Exercise = (): JSX.Element => {
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            if (apiToken === null || exerciseId === undefined || user === null) return;
+            if (apiToken === null || exerciseId === undefined || user === null || graderToken === null) return;
             setLoading(true);
 
             const newExercise = await getExercise(apiToken, exerciseId, navigate);

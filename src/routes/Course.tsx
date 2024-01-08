@@ -1,12 +1,12 @@
-import { Chip, Stack, Typography, useTheme } from '@mui/material';
+import { Paper, SxProps, Typography, useTheme } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
-import { CourseData, CoursePoints, getCourse, getCoursePoints, getExercises } from '../app/api/course';
+import { getCourse, getCourseTree } from '../app/api/course';
+import { CourseData, CourseTree } from '../app/api/courseTypes';
 import { parseTitle } from '../app/util';
-import CourseModule from '../components/CourseModule';
 
 const Course = (): JSX.Element => {
     const navigate = useNavigate();
@@ -18,51 +18,50 @@ const Course = (): JSX.Element => {
     const { language } = useContext(LanguageContext);
 
     const [course, setCourse] = useState<CourseData | null>(null);
-    const [coursePoints, setCoursePoints] = useState<CoursePoints | null>(null);
-    const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
+    const [courseTree, setCourseTree] = useState<CourseTree | null>(null);
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || courseId === undefined) return;
             const newCourse = await getCourse(apiToken, courseId, navigate);
-            const newCoursePoints = await getCoursePoints(apiToken, courseId, navigate);
-
-            const exercises = await getExercises(apiToken, courseId, navigate);
-            const maxSubmissions: { [key: number]: number } = {};
-            for (const result of exercises.results) {
-                for (const exercise of result.exercises) {
-                    maxSubmissions[exercise.id] = exercise.max_submissions;
-                }
-            }
+            const newCourseTree = await getCourseTree(apiToken, courseId, navigate);
 
             setCourse(newCourse);
-            setCoursePoints(newCoursePoints);
-            setExerciseMaxSubmissions(maxSubmissions);
+            setCourseTree(newCourseTree);
         };
         getData().catch(console.error);
     }, [apiToken, courseId, navigate]);
 
-    if (course === null || coursePoints === null || exerciseMaxSubmissions === null) {
-        return <Typography>{t('loading-course')}</Typography>;
-    }
+    const linkSx: SxProps = {
+        textDecoration: 'none',
+        ':hover': { textDecoration: 'underline' },
+        ':visited': { color: 'linktext' },
+        display: 'block',
+    };
 
-    const totalMaxPoints = coursePoints.modules.reduce((total, module) => total + module.max_points, 0);
+    if (course === null || courseTree === null) return <Typography>{t('loading-course')}</Typography>;
     return (
         <>
             <Typography variant="h2">{parseTitle(course.name, language)}</Typography>
-            <Stack direction="row" spacing={1} sx={{ mb: 3.5 }}>
-                <Typography variant="h6">{t('total-points')}</Typography>
-                <Chip
-                    label={`${coursePoints.points} / ${totalMaxPoints}`}
-                    variant={theme.palette.mode === 'dark' ? 'filled' : 'outlined'}
-                />
-            </Stack>
-
-            {coursePoints.modules
-                .filter((module) => module.exercises.length > 0)
-                .map((module) => (
-                    <CourseModule key={module.name} module={module} exerciseMaxSubmissions={exerciseMaxSubmissions} />
+            <Paper sx={{ p: theme.spacing(3), pt: `calc(${theme.spacing(3)} - 10px)` }}>
+                {courseTree.modules.map((module) => (
+                    <div key={`module-${module.id}`} style={{ paddingTop: 10 }}>
+                        <Typography variant="h4" component={Link} to={`/course/${courseId}/${module.id}`} sx={linkSx}>
+                            {module.name}
+                        </Typography>
+                        {module.children.map((item) => (
+                            <Typography
+                                key={`module-${item.id}`}
+                                sx={{ ...linkSx, pl: '32px', pt: '10px' }}
+                                component={Link}
+                                to={`/course/${courseId}/${module.id}/${item.id}`}
+                            >
+                                {parseTitle(item.name, language)}
+                            </Typography>
+                        ))}
+                    </div>
                 ))}
+            </Paper>
         </>
     );
 };

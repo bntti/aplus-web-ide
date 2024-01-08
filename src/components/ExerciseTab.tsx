@@ -6,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext } from '../app/StateProvider';
 import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
-import { SubmissionData, getSubmission } from '../app/api/submission';
+import { getSubmission } from '../app/api/submission';
+import { SubmissionData } from '../app/api/submissionTypes';
 import CodeEditor from '../components/CodeEditor';
 import FormExercise from '../components/FormExercise';
 import SubmissionSnackbar, { SubmissionStatus } from '../components/SubmissionSnackbar';

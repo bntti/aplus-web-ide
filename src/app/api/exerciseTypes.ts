@@ -56,3 +56,29 @@ export type GeneralSpec = z.infer<typeof GeneralSchema>;
 
 export type ExerciseData = z.infer<typeof ExerciseDataSchema>;
 export type ExerciseDataWithInfo = z.infer<typeof ExerciseDataWithInfoSchema>;
+
+export const SubmitterStatsSchema = z.object({
+    submissions_with_points: z.array(
+        z.object({
+            id: z.number().int().nonnegative(),
+            submission_time: z.string().datetime({ precision: 6 }).pipe(z.coerce.date()),
+            grade: z.number().int().nonnegative(),
+        }),
+    ),
+    submission_count: z.number().int().nonnegative(),
+    points_to_pass: z.number().int().nonnegative(),
+    points: z.number().int().nonnegative(),
+    passed: z.boolean(),
+});
+export type SubmitterStats = z.infer<typeof SubmitterStatsSchema>;
+
+export const SubmissionsSchema = z.object({
+    results: z.array(
+        z.object({
+            id: z.number().int().nonnegative(),
+            grade: z.number().int().nonnegative(),
+            submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
+        }),
+    ),
+});
+export type Submissions = z.infer<typeof SubmissionsSchema>;

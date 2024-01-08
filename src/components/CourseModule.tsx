@@ -20,7 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
 import { LanguageContext } from '../app/StateProvider';
-import { CourseModuleData } from '../app/api/course';
+import { CourseModuleData } from '../app/api/courseTypes';
 import { parseTitle } from '../app/util';
 import PointsChip from '../components/PointsChip';
 

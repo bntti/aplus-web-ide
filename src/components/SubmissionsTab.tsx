@@ -2,7 +2,7 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 
-import { Submissions } from '../app/api/exercise';
+import { Submissions } from '../app/api/exerciseTypes';
 import PointsChip from '../components/PointsChip';
 
 type Props = { numSubmissions: number; numWithPoints: number; maxPoints: number; submissions: Submissions };

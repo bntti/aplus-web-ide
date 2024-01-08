@@ -1,37 +1,17 @@
 import axios, { AxiosResponse } from 'axios';
 import { NavigateFunction } from 'react-router-dom';
-import { z } from 'zod';
 
-import { ExerciseData, ExerciseDataSchema } from './exerciseTypes';
+import {
+    ExerciseData,
+    ExerciseDataSchema,
+    Submissions,
+    SubmissionsSchema,
+    SubmitterStats,
+    SubmitterStatsSchema,
+} from './exerciseTypes';
 import { getGraderToken } from './login';
 import { ApiToken, GraderToken, User } from '../StateProvider';
 import { apiCatcher } from '../util';
-
-const SubmitterStatsSchema = z.object({
-    submissions_with_points: z.array(
-        z.object({
-            id: z.number().int().nonnegative(),
-            submission_time: z.string().datetime({ precision: 6 }).pipe(z.coerce.date()),
-            grade: z.number().int().nonnegative(),
-        }),
-    ),
-    submission_count: z.number().int().nonnegative(),
-    points_to_pass: z.number().int().nonnegative(),
-    points: z.number().int().nonnegative(),
-    passed: z.boolean(),
-});
-export type SubmitterStats = z.infer<typeof SubmitterStatsSchema>;
-
-const SubmissionsSchema = z.object({
-    results: z.array(
-        z.object({
-            id: z.number().int().nonnegative(),
-            grade: z.number().int().nonnegative(),
-            submission_time: z.string().datetime({ precision: 6, offset: true }).pipe(z.coerce.date()),
-        }),
-    ),
-});
-export type Submissions = z.infer<typeof SubmissionsSchema>;
 
 type ExerciseFunction<T> = (apiToken: ApiToken, exerciseId: string | number, navigate: NavigateFunction) => Promise<T>;
 
