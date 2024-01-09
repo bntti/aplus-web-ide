@@ -15,11 +15,8 @@ import { SubmissionData } from '../app/api/submissionTypes';
 type Props = {
     numSubmissions: number;
     exercise: ExerciseData;
-
-    formCallback: () => void;
+    callback: () => void;
     latestSubmission: SubmissionData | null;
-
-    codeCallback: () => void;
     templates: string[] | null;
     latestSubmissionFiles: string[] | null;
     showTemplates: boolean;
@@ -28,11 +25,8 @@ type Props = {
 const ExerciseContent = ({
     numSubmissions,
     exercise,
-
-    formCallback: parentFormCallBack,
+    callback: parentCallback,
     latestSubmission,
-
-    codeCallback,
     templates,
     latestSubmissionFiles,
     showTemplates = false,
@@ -65,12 +59,12 @@ const ExerciseContent = ({
                 setSubmissionStatus('rejected');
                 setValidationErrors(newLatestSubmission.feedback_json.validation_errors);
             }
-            parentFormCallBack();
+            parentCallback();
             setLoadingSubmissionResponse(false);
         };
         setLoadingSubmissionResponse(true);
         setSubmissionStatus('loading');
-        parentFormCallBack();
+        parentCallback();
         loadSubmission().catch(console.error);
     };
 
@@ -91,7 +85,7 @@ const ExerciseContent = ({
                 ) : (
                     <CodeEditor
                         exercise={exercise as ExerciseDataWithInfo}
-                        callback={codeCallback}
+                        callback={parentCallback}
                         codes={
                             latestSubmissionFiles ??
                             templates ??

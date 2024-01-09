@@ -212,6 +212,7 @@ const CodeEditor = ({
             </Tabs>
 
             <ReactCodeMirror
+                style={{ minHeight: '55vh' }}
                 value={codes[tabIndex]}
                 height="55vh"
                 onChange={(val) => {

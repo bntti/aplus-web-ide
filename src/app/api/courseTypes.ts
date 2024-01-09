@@ -53,8 +53,8 @@ const CourseTreeChapterSchema = BaseSchema.extend({
     type: z.literal('chapter'),
     children: z.array(CourseTreeExerciseSchema),
 });
-const CourseTreeRootItemSchema = BaseSchema.extend({ children: z.array(CourseTreeChapterSchema) });
-export const CourseTreeSchema = z.object({ modules: z.array(CourseTreeRootItemSchema) });
+const CourseTreeModuleSchema = BaseSchema.extend({ children: z.array(CourseTreeChapterSchema) });
+export const CourseTreeSchema = z.object({ modules: z.array(CourseTreeModuleSchema) });
 export type CourseTreeChapter = z.infer<typeof CourseTreeChapterSchema>;
-export type CourseTreeRootItem = z.infer<typeof CourseTreeRootItemSchema>;
+export type CourseTreeModule = z.infer<typeof CourseTreeModuleSchema>;
 export type CourseTree = z.infer<typeof CourseTreeSchema>;

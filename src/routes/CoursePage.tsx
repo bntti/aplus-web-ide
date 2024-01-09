@@ -5,7 +5,7 @@ import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
 import { getCourse, getCourseTree } from '../app/api/course';
-import { CourseData, CourseTree, CourseTreeChapter, CourseTreeRootItem } from '../app/api/courseTypes';
+import { CourseData, CourseTree, CourseTreeChapter, CourseTreeModule } from '../app/api/courseTypes';
 import { parseTitle } from '../app/util';
 import Exercise from '../components/Exercise';
 
@@ -32,7 +32,7 @@ const CoursePage = (): JSX.Element => {
         getData().catch(console.error);
     }, [apiToken, courseId, navigate]);
 
-    const getCourseParentItem = (items: CourseTreeRootItem[]): CourseTreeRootItem | null => {
+    const getCourseParentItem = (items: CourseTreeModule[]): CourseTreeModule | null => {
         if (!parentChapterId) return null;
         for (const rootItem of items) {
             if (rootItem.id === parseInt(parentChapterId)) return rootItem;

@@ -11,7 +11,6 @@ import Home from '../routes/Home';
 import Login from '../routes/Login';
 import Logout from '../routes/Logout';
 import Profile from '../routes/Profile';
-import Submission from '../routes/Submission';
 
 declare global {
     interface Window {
@@ -65,10 +64,6 @@ const router = createBrowserRouter([
                         element: <RequireAuth outlet={<CoursePage />} />,
                     },
                 ],
-            },
-            {
-                path: 'submission/:submissionId?',
-                element: <RequireAuth outlet={<Submission />} />,
             },
         ],
     },

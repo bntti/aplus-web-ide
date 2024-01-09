@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import ExerciseContent from './ExerciseContent';
+import SubmissionDialog from './SubmissionDialog';
 import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
 import { getExercise, getSubmissions, getSubmitterStats, getTemplates } from '../app/api/exercise';
 import { ExerciseData, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
@@ -31,6 +32,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [showTemplates, setShowTemplates] = useState<boolean>(false);
+    const [showSubmission, setShowSubmission] = useState<{ id: number; num: number } | null>(null);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
@@ -89,13 +91,6 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
         getData().catch(console.error);
     }, [apiToken, graderToken, exerciseId, navigate, getSubmissionsData, user, setGraderToken]);
 
-    const codeCallback = (): void => {
-        getSubmissionsData().catch(console.error);
-    };
-    const formCallback = (): void => {
-        getSubmissionsData().catch(console.error);
-    };
-
     const numSubmissions = submitterStats ? submitterStats.submission_count : 0;
 
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
@@ -120,7 +115,13 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
                     <Menu anchorEl={anchorEl} open={anchorEl !== null} onClose={() => setAnchorEl(null)}>
                         {submissions.results.length === 0 && <MenuItem>{t('no-submissions-yet')}</MenuItem>}
                         {submissions.results.map((submission, index) => (
-                            <MenuItem key={submission.id} onClick={() => console.log(submission.id)}>
+                            <MenuItem
+                                key={submission.id}
+                                onClick={() => {
+                                    setAnchorEl(null);
+                                    setShowSubmission({ id: submission.id, num: numSubmissions - index });
+                                }}
+                            >
                                 <ListItemText sx={{ mr: 1 }}>#{numSubmissions - index}</ListItemText>
                                 <Typography sx={{ mr: 1 }} variant="body2" color="text.secondary">
                                     {submission.submission_time.toLocaleString()}
@@ -129,6 +130,11 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
                             </MenuItem>
                         ))}
                     </Menu>
+                    <SubmissionDialog
+                        exercise={exercise}
+                        showSubmission={showSubmission}
+                        onClose={() => setShowSubmission(null)}
+                    />
                 </>
 
                 {templates !== null && (
@@ -162,9 +168,8 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
             <ExerciseContent
                 numSubmissions={numSubmissions}
                 exercise={exercise}
-                formCallback={formCallback}
+                callback={async (): Promise<void> => await getSubmissionsData()}
                 latestSubmission={latestSubmission}
-                codeCallback={codeCallback}
                 templates={templates}
                 latestSubmissionFiles={latestSubmissionFiles}
                 showTemplates={showTemplates}

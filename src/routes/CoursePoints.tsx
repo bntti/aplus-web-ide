@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
-import { getCourse, getCoursePoints, getExercises } from '../app/api/course';
+import { getCourse, getCoursePoints, getCourseTree, getExercises } from '../app/api/course';
 import { CourseData, CoursePointsData } from '../app/api/courseTypes';
 import { parseTitle } from '../app/util';
 import CourseModule from '../components/CourseModule';
@@ -21,29 +21,40 @@ const CoursePoints = (): JSX.Element => {
     const [course, setCourse] = useState<CourseData | null>(null);
     const [coursePoints, setCoursePoints] = useState<CoursePointsData | null>(null);
     const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
+    const [exercisePath, setExercisePath] = useState<{ [key: number]: string } | null>(null);
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || courseId === undefined) return;
             const newCourse = await getCourse(apiToken, courseId, navigate);
             const newCoursePoints = await getCoursePoints(apiToken, courseId, navigate);
-
+            const courseTree = await getCourseTree(apiToken, courseId, navigate);
             const exercises = await getExercises(apiToken, courseId, navigate);
+
             const maxSubmissions: { [key: number]: number } = {};
             for (const result of exercises.results) {
                 for (const exercise of result.exercises) {
                     maxSubmissions[exercise.id] = exercise.max_submissions;
                 }
             }
+            const newExercisePath: { [key: number]: string } = {};
+            for (const module of courseTree.modules) {
+                for (const chapter of module.children) {
+                    for (const exercise of chapter.children) {
+                        newExercisePath[exercise.id] = `${newCourse.id}/${module.id}/${chapter.id}`;
+                    }
+                }
+            }
 
             setCourse(newCourse);
             setCoursePoints(newCoursePoints);
             setExerciseMaxSubmissions(maxSubmissions);
+            setExercisePath(newExercisePath);
         };
         getData().catch(console.error);
     }, [apiToken, courseId, navigate]);
 
-    if (course === null || coursePoints === null || exerciseMaxSubmissions === null) {
+    if (course === null || coursePoints === null || exerciseMaxSubmissions === null || exercisePath === null) {
         return <Typography>{t('loading-course')}</Typography>;
     }
 
@@ -62,7 +73,12 @@ const CoursePoints = (): JSX.Element => {
             {coursePoints.modules
                 .filter((module) => module.exercises.length > 0)
                 .map((module) => (
-                    <CourseModule key={module.name} module={module} exerciseMaxSubmissions={exerciseMaxSubmissions} />
+                    <CourseModule
+                        key={module.name}
+                        module={module}
+                        exerciseMaxSubmissions={exerciseMaxSubmissions}
+                        exercisePath={exercisePath}
+                    />
                 ))}
         </>
     );
