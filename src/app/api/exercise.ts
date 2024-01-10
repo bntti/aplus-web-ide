@@ -117,7 +117,9 @@ export const getMaterialHtml = async (graderToken: GraderToken, chapterName: str
                 if (collector !== '') htmlList.push(collector);
                 collector = '';
             } else {
-                collector += `<${element.tagName}>`;
+                const attributeNames = element.getAttributeNames();
+                const attributes = attributeNames.map((name) => `${name}="${element.getAttribute(name)}"`).join(' ');
+                collector += `<${element.tagName} ${attributes}>`;
                 for (const child of element.childNodes) walkDom(child);
                 collector += `</${element.tagName}>`;
             }
