@@ -44,3 +44,10 @@ Run the project
 ```
 npm run dev
 ```
+
+### Testing
+
+1. Go to http://localhost:8000/accounts/login/ and login as admin (user: admin, password: admin)
+2. Go to http://localhost:8000/admin/course/enrollment/add/ and enter `Course instance: 1`, `User: 2` and save
+3. Go to http://localhost:8000/accounts/accounts/ and copy the `API Access Token`
+4. Go to http://localhost:5173/login and paste the API token

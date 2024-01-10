@@ -1,11 +1,12 @@
 import { Breadcrumbs, SxProps, Typography } from '@mui/material';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 
-import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
+import { ApiTokenContext, GraderTokenContext, LanguageContext } from '../app/StateProvider';
 import { getCourse, getCourseTree } from '../app/api/course';
 import { CourseData, CourseTree, CourseTreeChapter, CourseTreeModule } from '../app/api/courseTypes';
+import { getMaterialHtml } from '../app/api/exercise';
 import { parseTitle } from '../app/util';
 import Exercise from '../components/Exercise';
 
@@ -15,39 +16,56 @@ const CoursePage = (): JSX.Element => {
     const { t } = useTranslation();
 
     const { apiToken } = useContext(ApiTokenContext);
+    const { graderToken } = useContext(GraderTokenContext);
     const { language } = useContext(LanguageContext);
 
     const [course, setCourse] = useState<CourseData | null>(null);
     const [courseTree, setCourseTree] = useState<CourseTree | null>(null);
+    const [chapterHtml, setChapterHtml] = useState<string[] | null>(null);
+
+    const getCourseParentItem = useCallback(
+        (items: CourseTreeModule[]): CourseTreeModule | null => {
+            if (!parentChapterId) return null;
+            for (const rootItem of items) {
+                if (rootItem.id === parseInt(parentChapterId)) return rootItem;
+                continue;
+            }
+            return null;
+        },
+        [parentChapterId],
+    );
+    const getCourseChapterItem = useCallback(
+        (items: CourseTreeChapter[]): CourseTreeChapter | null => {
+            if (!chapterId) return null;
+            for (const chapterItem of items) {
+                if (chapterItem.id === parseInt(chapterId)) return chapterItem;
+            }
+            return null;
+        },
+        [chapterId],
+    );
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            if (apiToken === null || courseId === undefined) return;
+            if (apiToken === null || courseId === undefined || graderToken === null) return;
             const newCourse = await getCourse(apiToken, courseId, navigate);
             const newCourseTree = await getCourseTree(apiToken, courseId, navigate);
 
             setCourse(newCourse);
             setCourseTree(newCourseTree);
+
+            const parentItem = getCourseParentItem(newCourseTree.modules);
+            if (!parentItem) return;
+            const chapterItem = getCourseChapterItem(parentItem.children);
+            if (!chapterItem) return;
+
+            let cleanTitle = parseTitle(chapterItem.name, 'english');
+            if (cleanTitle.match(/\d\.\d/)) cleanTitle = cleanTitle.split(' ').slice(1).join(' ');
+            const newMaterial = await getMaterialHtml(graderToken, cleanTitle);
+            setChapterHtml(newMaterial);
         };
         getData().catch(console.error);
-    }, [apiToken, courseId, navigate]);
-
-    const getCourseParentItem = (items: CourseTreeModule[]): CourseTreeModule | null => {
-        if (!parentChapterId) return null;
-        for (const rootItem of items) {
-            if (rootItem.id === parseInt(parentChapterId)) return rootItem;
-            continue;
-        }
-        return null;
-    };
-
-    const getCourseChapterItem = (items: CourseTreeChapter[]): CourseTreeChapter | null => {
-        if (!chapterId) return null;
-        for (const chapterItem of items) {
-            if (chapterItem.id === parseInt(chapterId)) return chapterItem;
-        }
-        return null;
-    };
+    }, [apiToken, courseId, getCourseChapterItem, getCourseParentItem, graderToken, navigate]);
 
     const linkSx: SxProps = {
         textDecoration: 'none',
@@ -60,10 +78,8 @@ const CoursePage = (): JSX.Element => {
 
     const parentItem = getCourseParentItem(courseTree.modules);
     if (!parentItem) return <Navigate to={`/course/${courseId}`} />;
-    const chapterItem = getCourseChapterItem(parentItem.children);
 
-    if (chapterId) {
-        if (!chapterItem) return <Navigate to={`/course/${courseId}`} />;
+    if (!chapterId) {
         return (
             <>
                 <Typography variant="h2">{parseTitle(course.name, language)}</Typography>
@@ -71,22 +87,27 @@ const CoursePage = (): JSX.Element => {
                     <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                         {parseTitle(course.name, language)}
                     </Typography>
-                    <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}/${parentChapterId}`}>
-                        {parseTitle(parentItem.name, language)}
-                    </Typography>
-                    <Typography color="text.primary">{parseTitle(chapterItem.name, language)}</Typography>
+                    <Typography color="text.primary">{parseTitle(parentItem.name, language)}</Typography>
                 </Breadcrumbs>
-                <Typography variant="h4">{chapterItem.name}</Typography>
-                <Typography>TODO:Material</Typography>
-                {chapterItem.children.map((exercise) => (
-                    <div key={`exercise-${exercise.id}`}>
-                        <Exercise exerciseId={exercise.id} />
-                        <Typography>TODO:Material</Typography>
-                    </div>
+                <Typography variant="h4">{parentItem.name}</Typography>
+                <Typography>TODO</Typography>
+                {parentItem.children.map((item) => (
+                    <Typography
+                        key={`module-${item.id}`}
+                        sx={{ ...linkSx, display: 'block', pl: '32px', pt: '10px' }}
+                        component={Link}
+                        to={`/course/${courseId}/${parentChapterId}/${item.id}`}
+                    >
+                        {parseTitle(item.name, language)}
+                    </Typography>
                 ))}
             </>
         );
     }
+
+    const chapterItem = getCourseChapterItem(parentItem.children);
+    if (!chapterItem) return <Navigate to={`/course/${courseId}`} />;
+    if (chapterHtml === null) return <Typography>{t('loading-page')}</Typography>;
     return (
         <>
             <Typography variant="h2">{parseTitle(course.name, language)}</Typography>
@@ -94,19 +115,17 @@ const CoursePage = (): JSX.Element => {
                 <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                     {parseTitle(course.name, language)}
                 </Typography>
-                <Typography color="text.primary">{parseTitle(parentItem.name, language)}</Typography>
-            </Breadcrumbs>
-            <Typography variant="h4">{parentItem.name}</Typography>
-            <Typography>TODO</Typography>
-            {parentItem.children.map((item) => (
-                <Typography
-                    key={`module-${item.id}`}
-                    sx={{ ...linkSx, display: 'block', pl: '32px', pt: '10px' }}
-                    component={Link}
-                    to={`/course/${courseId}/${parentChapterId}/${item.id}`}
-                >
-                    {parseTitle(item.name, language)}
+                <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}/${parentChapterId}`}>
+                    {parseTitle(parentItem.name, language)}
                 </Typography>
+                <Typography color="text.primary">{parseTitle(chapterItem.name, language)}</Typography>
+            </Breadcrumbs>
+            <Typography variant="h4">{chapterItem.name}</Typography>
+            {chapterHtml.map((html, index) => (
+                <div key={`exercise-${index}`}>
+                    <div dangerouslySetInnerHTML={{ __html: html }} />
+                    {index < chapterItem.children.length && <Exercise exerciseId={chapterItem.children[index].id} />}
+                </div>
             ))}
         </>
     );

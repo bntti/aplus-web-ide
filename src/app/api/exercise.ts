@@ -2,6 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 import { NavigateFunction } from 'react-router-dom';
 
 import {
+    APlusJsonSchema,
     ExerciseData,
     ExerciseDataSchema,
     Submissions,
@@ -52,8 +53,6 @@ export const getTemplates = async (
     setGraderToken: (value: string) => void,
     isRetry = false,
 ): Promise<string[]> => {
-    if (!graderToken) throw new Error('Invalid courseId / apiToken');
-
     const templates = [];
     for (const template of templateNames) {
         let retry = false;
@@ -82,4 +81,51 @@ export const getTemplates = async (
         templates.push((templateResponse as AxiosResponse).data);
     }
     return templates;
+};
+
+// TODO: use API
+// No catch because dev, will fail on grader token expiry
+export const getMaterialHtml = async (graderToken: GraderToken, chapterName: string): Promise<string[] | null> => {
+    const materialResponse = await axios.get('/grader/default/aplus-json', {
+        headers: { Authorization: `Bearer ${graderToken}` },
+    });
+    const material = APlusJsonSchema.parse(materialResponse.data);
+    let chapterMaterial = null;
+    for (const module of material.modules) {
+        for (const chapter of module.children) {
+            if (chapter.name === chapterName) chapterMaterial = chapter;
+        }
+    }
+    if (chapterMaterial === null) return null;
+    const htmlResponse = await axios.get(chapterMaterial.url.replace('http://localhost:8080', '/grader'), {
+        headers: { Authorization: `Bearer ${graderToken}` },
+    });
+
+    const parser = new DOMParser();
+    const fullDoc = parser.parseFromString(htmlResponse.data, 'text/html');
+    const chapterContent = fullDoc.querySelector('.content')?.innerHTML;
+    if (!chapterContent) return null;
+
+    const innerDoc = parser.parseFromString(chapterContent, 'text/html');
+    const htmlList = [];
+    let collector = '';
+    const walkDom = (node: Node): void => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            const element = node as Element;
+
+            if (element.classList.contains('exercise')) {
+                if (collector !== '') htmlList.push(collector);
+                collector = '';
+            } else {
+                collector += `<${element.tagName}>`;
+                for (const child of element.childNodes) walkDom(child);
+                collector += `</${element.tagName}>`;
+            }
+        } else if (node.nodeType === Node.TEXT_NODE) {
+            collector += (node as Text).textContent || '';
+        }
+    };
+    walkDom(innerDoc.body);
+    if (collector !== '') htmlList.push(collector);
+    return htmlList;
 };

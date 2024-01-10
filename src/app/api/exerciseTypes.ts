@@ -82,3 +82,18 @@ export const SubmissionsSchema = z.object({
     ),
 });
 export type Submissions = z.infer<typeof SubmissionsSchema>;
+
+// Temporary dev
+export const APlusJsonSchema = z.object({
+    modules: z.array(
+        z.object({
+            children: z.array(
+                z.object({
+                    name: z.string(),
+                    url: z.string().url(),
+                }),
+            ),
+        }),
+    ),
+});
+export type APlusJson = z.infer<typeof APlusJsonSchema>;

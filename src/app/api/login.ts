@@ -14,7 +14,7 @@ export const getGraderToken = async (apiToken: ApiToken, courses: { id: number }
         {
             taud: 'grader',
             exp: '01:00:00',
-            permissions: courses.map((course) => ['exercise', 1, { id: course.id }]),
+            permissions: courses.map((course) => ['instance', 1, { id: course.id }]), // TODO: change 'instance' back to 'exercise'
         },
         { headers: { Authorization: `Token ${apiToken}` } },
     );
