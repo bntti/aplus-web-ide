@@ -56,11 +56,11 @@ const router = createBrowserRouter([
                         element: <RequireAuth outlet={<CoursePoints />} />,
                     },
                     {
-                        path: ':parentChapterId?',
+                        path: ':moduleId?',
                         element: <RequireAuth outlet={<CoursePage />} />,
                     },
                     {
-                        path: ':parentChapterId?/:chapterId',
+                        path: ':moduleId?/:chapterId',
                         element: <RequireAuth outlet={<CoursePage />} />,
                     },
                 ],
