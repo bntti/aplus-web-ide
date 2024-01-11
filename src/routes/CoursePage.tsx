@@ -1,17 +1,17 @@
 import { Breadcrumbs, SxProps, Typography } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, LanguageContext } from '../app/StateProvider';
-import { getCourse, getCourseTree } from '../app/api/course';
-import { CourseData, CourseTree, CourseTreeChapter, CourseTreeModule } from '../app/api/courseTypes';
+import { CourseTreeChapter, CourseTreeModule } from '../app/api/courseTypes';
 import { getMaterialHtml } from '../app/api/exercise';
 import { parseTitle } from '../app/util';
+import { CourseContext } from '../components/CourseRoot';
 import Exercise from '../components/Exercise';
 
 const CoursePage = (): JSX.Element => {
-    const navigate = useNavigate();
+    const { courseTree, course } = useOutletContext<CourseContext>();
     const { courseId, moduleId, chapterId } = useParams();
     const { t } = useTranslation();
 
@@ -19,11 +19,7 @@ const CoursePage = (): JSX.Element => {
     const { graderToken } = useContext(GraderTokenContext);
     const { language } = useContext(LanguageContext);
 
-    // TODO: add module ID as well?
-    const [dataModuleId, setDataModuleId] = useState<number>(-1);
-    const [dataChapterId, setDataChapterId] = useState<number>(-1);
-    const [course, setCourse] = useState<CourseData | null>(null);
-    const [courseTree, setCourseTree] = useState<CourseTree | null>(null);
+    const [dataChapterId, setDataChapterid] = useState<number>(-1);
     const [chapterHtml, setChapterHtml] = useState<string[] | null>(null);
 
     const getCourseParentItem = useCallback(
@@ -49,22 +45,12 @@ const CoursePage = (): JSX.Element => {
     );
 
     useEffect(() => {
-        if (chapterId === undefined && parseInt(moduleId as string) === dataModuleId) return;
-        else if (chapterId !== undefined && parseInt(chapterId) === dataChapterId) return;
+        if (chapterId === undefined || dataChapterId === parseInt(chapterId as string)) return;
 
         const getData = async (): Promise<void> => {
             if (apiToken === null || courseId === undefined || graderToken === null) return;
-            const newCourse = await getCourse(apiToken, courseId, navigate);
-            const newCourseTree = await getCourseTree(apiToken, courseId, navigate);
 
-            if (chapterId === undefined) {
-                setCourse(newCourse);
-                setCourseTree(newCourseTree);
-                setDataModuleId(parseInt(moduleId as string));
-                return;
-            }
-
-            const parentItem = getCourseParentItem(newCourseTree.modules);
+            const parentItem = getCourseParentItem(courseTree.modules);
             if (!parentItem) throw new Error('Failed to find module from tree');
             const chapterItem = getCourseChapterItem(parentItem.children);
             if (!chapterItem) throw new Error('Failed to find chapter from tree');
@@ -73,13 +59,8 @@ const CoursePage = (): JSX.Element => {
             if (cleanTitle.match(/\d\.\d/)) cleanTitle = cleanTitle.split(' ').slice(1).join(' ');
             const newMaterial = await getMaterialHtml(graderToken, cleanTitle);
 
-            if (parseInt(moduleId as string) !== dataModuleId) {
-                setCourse(newCourse);
-                setCourseTree(newCourseTree);
-                setDataModuleId(parseInt(moduleId as string));
-            }
             setChapterHtml(newMaterial);
-            setDataChapterId(parseInt(chapterId as string));
+            setDataChapterid(parseInt(chapterId as string));
         };
         getData().catch(console.error);
     }, [
@@ -90,12 +71,10 @@ const CoursePage = (): JSX.Element => {
         courseId,
         courseTree,
         dataChapterId,
-        dataModuleId,
         getCourseChapterItem,
         getCourseParentItem,
         graderToken,
         moduleId,
-        navigate,
     ]);
 
     const linkSx: SxProps = {
@@ -113,7 +92,6 @@ const CoursePage = (): JSX.Element => {
     if (!chapterId) {
         return (
             <>
-                <Typography variant="h2">{parseTitle(course.name, language)}</Typography>
                 <Breadcrumbs>
                     <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                         {parseTitle(course.name, language)}
@@ -141,7 +119,6 @@ const CoursePage = (): JSX.Element => {
     if (chapterHtml === null) return <Typography>{t('loading-page')}</Typography>;
     return (
         <>
-            <Typography variant="h2">{parseTitle(course.name, language)}</Typography>
             <Breadcrumbs>
                 <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                     {parseTitle(course.name, language)}

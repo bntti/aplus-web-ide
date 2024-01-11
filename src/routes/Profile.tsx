@@ -78,8 +78,8 @@ const Profile = (): JSX.Element => {
                         <TableCell>{user.email}</TableCell>
                     </TableRow>
                     <TableRow>
-                        <TableCell>{t('username')}</TableCell>
-                        <TableCell>{user.username}</TableCell>
+                        <TableCell sx={{ borderBottom: 'none' }}>{t('username')}</TableCell>
+                        <TableCell sx={{ borderBottom: 'none' }}>{user.username}</TableCell>
                     </TableRow>
                 </TableBody>
             </Table>

@@ -73,6 +73,8 @@ i18n.use(LanguageDetector) // eslint-disable-line import/no-named-as-default-mem
                     'course-points': 'Course points',
                     'no-submissions-yet': 'No submissions yet',
                     'show-code': 'Show code',
+                    close: 'Close',
+                    'logging-out': 'Logging out...',
                 },
             },
             fi: {
@@ -140,6 +142,8 @@ i18n.use(LanguageDetector) // eslint-disable-line import/no-named-as-default-mem
                     'course-points': 'Kurssin pisteet',
                     'no-submissions-yet': 'Ei palautuksia',
                     'show-code': 'Näytä koodi',
+                    close: 'Sulje',
+                    'logging-out': 'Kirjaudutaan ulos...',
                 },
             },
         },

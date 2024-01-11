@@ -1,4 +1,4 @@
-import { Card, CardActionArea, CardContent, Divider, Grid, Typography } from '@mui/material';
+import { Box, Card, CardActionArea, CardContent, Divider, Typography } from '@mui/material';
 import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -22,23 +22,25 @@ const Home = (): JSX.Element => {
                         {t('my-courses')}
                     </Typography>
 
-                    <Grid container spacing={10}>
+                    <Box sx={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
                         {user.enrolled_courses.map((course) => (
-                            <Grid xs={4} item key={course.id} style={{ textDecoration: 'none' }}>
-                                <Card>
-                                    <CardActionArea component={Link} to={`/course/${course.id}`} sx={{ height: 200 }}>
-                                        <CardContent>
-                                            <Typography variant="h5">{course.name}</Typography>
-                                            <Typography sx={{ mt: 1.5 }}>{course.instance_name}</Typography>
-                                            <Typography sx={{}} variant="body2" color="text.secondary">
-                                                {course.code}
-                                            </Typography>
-                                        </CardContent>
-                                    </CardActionArea>
-                                </Card>
-                            </Grid>
+                            <Card key={`course-card-${course.id}`} sx={{ mr: 2, mb: 2 }}>
+                                <CardActionArea
+                                    component={Link}
+                                    to={`/course/${course.id}`}
+                                    sx={{ height: 200, width: 250 }}
+                                >
+                                    <CardContent>
+                                        <Typography variant="h4">{course.name}</Typography>
+                                        <Typography sx={{ mt: 1.5 }}>{course.instance_name}</Typography>
+                                        <Typography variant="body2" color="text.secondary">
+                                            {course.code}
+                                        </Typography>
+                                    </CardContent>
+                                </CardActionArea>
+                            </Card>
                         ))}
-                    </Grid>
+                    </Box>
                 </>
             )}
         </>

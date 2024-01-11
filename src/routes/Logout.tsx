@@ -1,7 +1,7 @@
 import { Button, Container, Paper, Typography } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 
@@ -45,13 +45,13 @@ const Logout = (): JSX.Element => {
                 <Button onClick={() => setNeedsConfirm(false)} color="error" variant="outlined" sx={{ mb: 1, mr: 1 }}>
                     {t('log-out')}
                 </Button>
-                <Button onClick={() => navigate('/')} variant="outlined" sx={{ mb: 1 }}>
+                <Button component={Link} to="/" variant="outlined" sx={{ mb: 1 }}>
                     {t('cancel')}
                 </Button>
             </Container>
         );
     }
-    return <Typography>Logging out...</Typography>;
+    return <Typography>{t('logging-out')}</Typography>;
 };
 
 export default Logout;

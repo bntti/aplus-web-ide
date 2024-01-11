@@ -1,24 +1,25 @@
 import { Chip, Stack, Typography, useTheme } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 
 import { ApiTokenContext, LanguageContext } from '../app/StateProvider';
-import { getCourse, getCoursePoints, getCourseTree, getExercises } from '../app/api/course';
-import { CourseData, CoursePointsData } from '../app/api/courseTypes';
+import { getCoursePoints, getExercises } from '../app/api/course';
+import { CoursePointsData } from '../app/api/courseTypes';
 import { parseTitle } from '../app/util';
 import CourseModule from '../components/CourseModule';
+import { CourseContext } from '../components/CourseRoot';
 
 const CoursePoints = (): JSX.Element => {
     const navigate = useNavigate();
     const theme = useTheme();
+    const { courseTree, course } = useOutletContext<CourseContext>();
     const { courseId } = useParams();
     const { t } = useTranslation();
 
     const { apiToken } = useContext(ApiTokenContext);
     const { language } = useContext(LanguageContext);
 
-    const [course, setCourse] = useState<CourseData | null>(null);
     const [coursePoints, setCoursePoints] = useState<CoursePointsData | null>(null);
     const [exerciseMaxSubmissions, setExerciseMaxSubmissions] = useState<{ [key: number]: number } | null>(null);
     const [exercisePath, setExercisePath] = useState<{ [key: number]: string } | null>(null);
@@ -26,9 +27,7 @@ const CoursePoints = (): JSX.Element => {
     useEffect(() => {
         const getData = async (): Promise<void> => {
             if (apiToken === null || courseId === undefined) return;
-            const newCourse = await getCourse(apiToken, courseId, navigate);
             const newCoursePoints = await getCoursePoints(apiToken, courseId, navigate);
-            const courseTree = await getCourseTree(apiToken, courseId, navigate);
             const exercises = await getExercises(apiToken, courseId, navigate);
 
             const maxSubmissions: { [key: number]: number } = {};
@@ -41,18 +40,17 @@ const CoursePoints = (): JSX.Element => {
             for (const module of courseTree.modules) {
                 for (const chapter of module.children) {
                     for (const exercise of chapter.children) {
-                        newExercisePath[exercise.id] = `${newCourse.id}/${module.id}/${chapter.id}`;
+                        newExercisePath[exercise.id] = `${course.id}/${module.id}/${chapter.id}`;
                     }
                 }
             }
 
-            setCourse(newCourse);
             setCoursePoints(newCoursePoints);
             setExerciseMaxSubmissions(maxSubmissions);
             setExercisePath(newExercisePath);
         };
         getData().catch(console.error);
-    }, [apiToken, courseId, navigate]);
+    }, [apiToken, course.id, courseId, courseTree.modules, navigate]);
 
     if (course === null || coursePoints === null || exerciseMaxSubmissions === null || exercisePath === null) {
         return <Typography>{t('loading-course')}</Typography>;
