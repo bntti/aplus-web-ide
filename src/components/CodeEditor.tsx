@@ -19,7 +19,7 @@ import {
 } from '@mui/material';
 import { githubDark, githubLight } from '@uiw/codemirror-theme-github';
 import ReactCodeMirror, { EditorView } from '@uiw/react-codemirror';
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -86,16 +86,16 @@ const getInitCodes = (exercise: ExerciseDataWithInfo, readOnly: boolean, default
     return storageEmpty ? [...(defaultCodes as string[])] || storageCodes : storageCodes;
 };
 
-type Props =
+export type CodeEditorProps =
     | {
           exercise: ExerciseDataWithInfo;
-          callback: () => void;
+          callback: (response: AxiosResponse) => void;
           codes?: null | string[];
           readOnly?: false;
       }
     | {
           exercise: ExerciseDataWithInfo;
-          callback?: null | (() => void);
+          callback?: null | ((response: AxiosResponse) => void);
           codes: string[];
           readOnly: true;
       };
@@ -105,7 +105,7 @@ const CodeEditor = ({
     callback = null,
     codes: defaultCodes = null,
     readOnly = false,
-}: Props): JSX.Element => {
+}: CodeEditorProps): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
         throw new Error("Exercise that wasn't a file was passed to CodeEditor");
     }

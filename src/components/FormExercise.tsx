@@ -44,7 +44,7 @@ const NoButtonsTextField = styled(TextField)(() => ({
     },
 }));
 
-type Props =
+export type FormExerciseProps =
     | {
           exercise: ExerciseDataWithInfo;
           apiToken: string;
@@ -114,7 +114,7 @@ const FormExercise = ({
     points = null,
     validationErrors = null,
     readOnly = false,
-}: Props): JSX.Element => {
+}: FormExerciseProps): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
         throw new Error('Tried to pass file type form to FormExercise');
     }

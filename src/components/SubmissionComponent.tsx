@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next';
 import CodeEditor from './CodeEditor';
 import FormExercise from './FormExercise';
 import TabPanel from './TabPanel';
-import { ExerciseData, ExerciseDataWithInfo } from '../app/api/exerciseTypes';
+import { ExerciseDataWithInfo } from '../app/api/exerciseTypes';
 import { SubmissionData } from '../app/api/submissionTypes';
 
-type Props = { submission: SubmissionData; exercise: ExerciseData | null; codes: string[] | null };
+type Props = { submission: SubmissionData; exercise: ExerciseDataWithInfo | null; codes: string[] | null };
 
 const SubmissionComponent = ({ submission, exercise, codes }: Props): JSX.Element => {
     const { t } = useTranslation();
