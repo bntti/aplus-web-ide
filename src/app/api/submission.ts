@@ -35,10 +35,11 @@ export const getSubmissionFiles = async (
     for (let i = 0; i < files.length; i++) {
         const codeResponse = await axios
             .get(`/api/v2/submissions/${submissionId}/files/${files[i].id}`, {
+                responseType: 'blob',
                 headers: { Authorization: `Token ${apiToken}` },
             })
             .catch((error) => apiCatcher(navigate, error));
-        newCodes.push(codeResponse.data);
+        newCodes.push(await codeResponse.data.text());
     }
     return newCodes;
 };

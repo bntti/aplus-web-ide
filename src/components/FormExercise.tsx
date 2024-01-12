@@ -254,9 +254,7 @@ const FormExercise = ({
     };
 
     useEffect(() => {
-        if (window?.MathJax !== undefined) {
-            window.MathJax.typeset();
-        }
+        if (window?.MathJax !== undefined) window.MathJax.typeset();
     });
 
     const handleSubmit = (event: React.SyntheticEvent): void => {

@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { Navigate, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from './StateProvider';
+import { auth } from './auth';
 import CourseRoot from '../components/CourseRoot';
 import Root from '../components/Root';
 import Course from '../routes/Course';
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
             {
                 path: 'course/:courseId?',
                 element: <CourseRoot />,
+                loader: auth.getCourseData.bind(auth),
                 children: [
                     {
                         path: '',
@@ -54,6 +56,7 @@ const router = createBrowserRouter([
                     {
                         path: 'points',
                         element: <RequireAuth outlet={<CoursePoints />} />,
+                        loader: auth.getCoursePointsData.bind(auth),
                     },
                     {
                         path: ':moduleId?',

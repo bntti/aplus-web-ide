@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
+import { auth } from '../app/auth';
 
 const getNeedsConfirm = (state: { force?: boolean }): boolean => {
     if (state && state.force) return false;
@@ -31,6 +32,7 @@ const Logout = (): JSX.Element => {
         setApiToken(null);
         setUser(null);
         setGraderToken(null);
+        auth.signOut();
         localStorage.clear();
         navigate('/');
     }, [needsConfirm, navigate, setApiToken, setGraderToken, setUser]);

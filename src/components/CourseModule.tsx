@@ -27,9 +27,10 @@ import PointsChip from '../components/PointsChip';
 type Props = {
     module: CourseModuleData;
     exerciseMaxSubmissions: { [key: number]: number };
-    exercisePath: { [key: number]: string };
+    exercisePaths: { [key: number]: string };
 };
-const CourseModule = ({ module, exerciseMaxSubmissions, exercisePath }: Props): JSX.Element => {
+
+const CourseModule = ({ module, exerciseMaxSubmissions, exercisePaths }: Props): JSX.Element => {
     const theme = useTheme();
     const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
@@ -84,7 +85,7 @@ const CourseModule = ({ module, exerciseMaxSubmissions, exercisePath }: Props): 
                                 <TableRow
                                     key={exercise.id}
                                     component={Link}
-                                    to={`/course/${exercisePath[exercise.id]}`}
+                                    to={`/course/${exercisePaths[exercise.id]}`}
                                     sx={{
                                         textDecoration: 'none',
                                         '&:last-child div.MuiTableCell-root': {

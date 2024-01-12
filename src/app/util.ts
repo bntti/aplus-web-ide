@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
 
@@ -8,6 +8,10 @@ export const apiCatcher = (navigate: NavigateFunction, error: AxiosError): never
         navigate('/logout', { state: { force: true } });
         throw new Error('Invalid api Token, redirecting to /logout');
     } else throw error;
+};
+
+export const checkError = (error: unknown): boolean => {
+    return axios.isAxiosError(error) && JSON.parse(error.request.response).detail;
 };
 
 export const parseTitle = (name: string, language: 'english' | 'finnish'): string => {
@@ -44,9 +48,7 @@ export const usePersistantState = <T>(
     let initValue = initialValue;
     try {
         const value = localStorage.getItem(key);
-        if (value) {
-            initValue = schema.parse(JSON.parse(value));
-        }
+        if (value) initValue = schema.parse(JSON.parse(value));
     } catch (e) {
         console.error(e);
         localStorage.removeItem(key);

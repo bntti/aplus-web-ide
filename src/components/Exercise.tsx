@@ -32,7 +32,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
 
     const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
     const [showTemplates, setShowTemplates] = useState<boolean>(false);
-    const [showSubmission, setShowSubmission] = useState<{ id: number; num: number } | null>(null);
+    const [targetSubmission, setTargetSubmission] = useState<{ id: number; num: number } | null>(null);
 
     const getSubmissionsData = useCallback(async (): Promise<void> => {
         if (apiToken === null || exerciseId === undefined) return;
@@ -119,7 +119,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
                                 key={submission.id}
                                 onClick={() => {
                                     setAnchorEl(null);
-                                    setShowSubmission({ id: submission.id, num: numSubmissions - index });
+                                    setTargetSubmission({ id: submission.id, num: numSubmissions - index });
                                 }}
                             >
                                 <ListItemText sx={{ mr: 1 }}>#{numSubmissions - index}</ListItemText>
@@ -132,8 +132,8 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
                     </Menu>
                     <SubmissionDialog
                         exercise={exercise}
-                        showSubmission={showSubmission}
-                        onClose={() => setShowSubmission(null)}
+                        targetSubmission={targetSubmission}
+                        onClose={() => setTargetSubmission(null)}
                     />
                 </>
 

@@ -6,7 +6,7 @@ import { usePersistantState } from './util';
 type Dispatcher<T> = React.Dispatch<React.SetStateAction<T>>;
 
 // Api token
-const ApiTokenSchema = z.string();
+export const ApiTokenSchema = z.string();
 export type ApiToken = z.infer<typeof ApiTokenSchema>;
 type ContextApiToken = ApiToken | null;
 type ApiTokenContext = { apiToken: ContextApiToken; setApiToken: Dispatcher<ContextApiToken> };

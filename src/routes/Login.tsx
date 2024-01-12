@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 import { getGraderToken, getUser } from '../app/api/login';
+import { auth } from '../app/auth';
 
 const Login = (): JSX.Element => {
     const navigate = useNavigate();
@@ -25,6 +26,7 @@ const Login = (): JSX.Element => {
         setApiToken(apiToken);
         setUser(newUser);
         setGraderToken(newGraderToken);
+        auth.signIn(apiToken);
         if (state && state.from) navigate(state.from);
         else navigate('/');
     };

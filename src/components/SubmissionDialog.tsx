@@ -10,9 +10,9 @@ import { ExerciseData } from '../app/api/exerciseTypes';
 import { getSubmission, getSubmissionFiles } from '../app/api/submission';
 import { SubmissionData } from '../app/api/submissionTypes';
 
-type Props = { exercise: ExerciseData; showSubmission: { id: number; num: number } | null; onClose: () => void };
+type Props = { exercise: ExerciseData; targetSubmission: { id: number; num: number } | null; onClose: () => void };
 
-const SubmissionDialog = ({ exercise, showSubmission, onClose }: Props): JSX.Element => {
+const SubmissionDialog = ({ exercise, targetSubmission, onClose }: Props): JSX.Element => {
     const navigate = useNavigate();
     const { t } = useTranslation();
 
@@ -23,8 +23,8 @@ const SubmissionDialog = ({ exercise, showSubmission, onClose }: Props): JSX.Ele
 
     useEffect(() => {
         const getData = async (): Promise<void> => {
-            if (apiToken === null || showSubmission === null) return;
-            const newSubmission = await getSubmission(apiToken, showSubmission.id, navigate);
+            if (apiToken === null || targetSubmission === null) return;
+            const newSubmission = await getSubmission(apiToken, targetSubmission.id, navigate);
             let newCodes = null;
 
             if (newSubmission.type === 'waiting') {
@@ -35,7 +35,7 @@ const SubmissionDialog = ({ exercise, showSubmission, onClose }: Props): JSX.Ele
 
             newCodes = null;
             if (newSubmission.type === 'file') {
-                newCodes = await getSubmissionFiles(apiToken, showSubmission.id, newSubmission.files, navigate);
+                newCodes = await getSubmissionFiles(apiToken, targetSubmission.id, newSubmission.files, navigate);
             }
 
             setSubmission(newSubmission);
@@ -43,26 +43,24 @@ const SubmissionDialog = ({ exercise, showSubmission, onClose }: Props): JSX.Ele
         };
 
         getData().catch(console.error);
-    }, [apiToken, showSubmission, navigate]);
+    }, [apiToken, targetSubmission, navigate]);
 
     useEffect(() => {
-        if (window?.MathJax !== undefined) {
-            window.MathJax.typeset();
-        }
+        if (window?.MathJax !== undefined) window.MathJax.typeset();
     });
 
     if (submission === null || exercise?.exercise_info === null) {
         return (
-            <Dialog open={showSubmission !== null} onClose={onClose}>
+            <Dialog open={targetSubmission !== null} onClose={onClose}>
                 {submission === null ? t('loading-submission') : t('no-exercise-info-available')}
             </Dialog>
         );
     }
     return (
-        <Dialog open={showSubmission !== null} onClose={onClose} fullWidth maxWidth="lg" sx={{ p: 0 }}>
+        <Dialog open={targetSubmission !== null} onClose={onClose} fullWidth maxWidth="lg" sx={{ p: 0 }}>
             <DialogContent sx={{ px: 1, py: 2 }} dividers>
                 <DialogTitle sx={{ pb: 0.5, pt: 0 }}>
-                    {t('submission')} #{showSubmission?.num}
+                    {t('submission')} #{targetSubmission?.num}
                 </DialogTitle>
 
                 <Stack direction="row" spacing={1} alignItems="center" sx={{ ml: 3 }}>
