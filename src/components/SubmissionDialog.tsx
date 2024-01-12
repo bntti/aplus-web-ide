@@ -1,4 +1,14 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Stack, Typography } from '@mui/material';
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Skeleton,
+    Stack,
+    Typography,
+} from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -6,11 +16,15 @@ import { useNavigate } from 'react-router-dom';
 import PointsChip from './PointsChip';
 import SubmissionComponent from './SubmissionComponent';
 import { ApiTokenContext } from '../app/StateProvider';
-import { ExerciseData } from '../app/api/exerciseTypes';
+import { ExerciseDataWithInfo } from '../app/api/exerciseTypes';
 import { getSubmission, getSubmissionFiles } from '../app/api/submission';
 import { SubmissionData } from '../app/api/submissionTypes';
 
-type Props = { exercise: ExerciseData; targetSubmission: { id: number; num: number } | null; onClose: () => void };
+type Props = {
+    exercise: ExerciseDataWithInfo;
+    targetSubmission: { id: number; num: number } | null;
+    onClose: () => void;
+};
 
 const SubmissionDialog = ({ exercise, targetSubmission, onClose }: Props): JSX.Element => {
     const navigate = useNavigate();
@@ -49,10 +63,10 @@ const SubmissionDialog = ({ exercise, targetSubmission, onClose }: Props): JSX.E
         if (window?.MathJax !== undefined) window.MathJax.typeset();
     });
 
-    if (submission === null || exercise?.exercise_info === null) {
+    if (submission === null) {
         return (
-            <Dialog open={targetSubmission !== null} onClose={onClose}>
-                {submission === null ? t('loading-submission') : t('no-exercise-info-available')}
+            <Dialog open={targetSubmission !== null} onClose={onClose} fullWidth maxWidth="lg">
+                <Skeleton variant="rounded" height="65vh" />
             </Dialog>
         );
     }

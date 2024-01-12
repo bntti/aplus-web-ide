@@ -7,7 +7,7 @@ import ExerciseContent from './ExerciseContent';
 import SubmissionDialog from './SubmissionDialog';
 import { ApiTokenContext, GraderTokenContext, LanguageContext, UserContext } from '../app/StateProvider';
 import { getExercise, getSubmissions, getSubmitterStats, getTemplates } from '../app/api/exercise';
-import { ExerciseData, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
+import { ExerciseData, ExerciseDataWithInfo, Submissions, SubmitterStats } from '../app/api/exerciseTypes';
 import { getSubmission, getSubmissionFiles } from '../app/api/submission';
 import { SubmissionData } from '../app/api/submissionTypes';
 import { parseTitle } from '../app/util';
@@ -96,6 +96,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
     if (apiToken === null) throw new Error('Exercise was called even though apiToken is null');
     if (exerciseId === undefined) return <Navigate replace to="/" />;
     if (exercise !== null && !exercise.is_submittable) throw new Error('Exercise is not submittable?');
+    if (exercise !== null && !exercise.exercise_info) throw new Error('No exercise info?');
     if (exercise === null || submitterStats === null || submissions === null || loading) {
         return <Skeleton variant="rounded" height="60vh" />;
     }
@@ -131,7 +132,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
                         ))}
                     </Menu>
                     <SubmissionDialog
-                        exercise={exercise}
+                        exercise={exercise as ExerciseDataWithInfo}
                         targetSubmission={targetSubmission}
                         onClose={() => setTargetSubmission(null)}
                     />
