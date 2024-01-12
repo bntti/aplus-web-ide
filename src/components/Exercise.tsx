@@ -1,4 +1,4 @@
-import { Button, Divider, ListItemText, Menu, MenuItem, Paper, Stack, Typography } from '@mui/material';
+import { Button, Divider, ListItemText, Menu, MenuItem, Paper, Skeleton, Stack, Typography } from '@mui/material';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
@@ -97,7 +97,7 @@ const Exercise = ({ exerciseId }: { exerciseId: number }): JSX.Element => {
     if (exerciseId === undefined) return <Navigate replace to="/" />;
     if (exercise !== null && !exercise.is_submittable) throw new Error('Exercise is not submittable?');
     if (exercise === null || submitterStats === null || submissions === null || loading) {
-        return <Typography>{t('loading-exercise')}</Typography>;
+        return <Skeleton variant="rounded" height="60vh" />;
     }
 
     return (

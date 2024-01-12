@@ -1,4 +1,4 @@
-import { Box, Container, Paper, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Container, Paper, Skeleton, Tab, Tabs, Typography } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -55,7 +55,7 @@ const SubmissionComponent = ({ submission, exercise, codes }: Props): JSX.Elemen
                     </TabPanel>
                     <TabPanel index={1} value={activeIndex}>
                         {codes === null ? (
-                            <Typography>{t('loading-code')}</Typography>
+                            <Skeleton variant="rounded" height="55vh" />
                         ) : (
                             <CodeEditor exercise={exercise as ExerciseDataWithInfo} codes={codes} readOnly />
                         )}

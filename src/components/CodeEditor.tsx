@@ -211,22 +211,32 @@ const CodeEditor = ({
                 ))}
             </Tabs>
 
-            <ReactCodeMirror
-                style={{ minHeight: '55vh' }}
-                value={codes[tabIndex]}
-                height="55vh"
-                onChange={(val) => {
-                    localStorage.setItem(`code-${exercise.id}-${tabIndex}`, val);
-                    codes[tabIndex] = val;
-                    setCodes(codes);
-                }}
-                readOnly={readOnly}
-                theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
-                extensions={[
-                    theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
-                    ...getLanguage(currentLanguage),
-                ]}
-            />
+            <div style={{ display: 'flex', height: '55vh' }}>
+                <div style={{ width: '32px', backgroundColor: theme.palette.mode === 'dark' ? '#333338' : '#fff' }} />
+                <div
+                    style={{
+                        flex: 1,
+                        backgroundColor: theme.palette.mode === 'dark' ? '#0d1117' : '#fff',
+                    }}
+                >
+                    <ReactCodeMirror
+                        style={{ minHeight: '55vh', marginLeft: '-32px' }}
+                        value={codes[tabIndex]}
+                        height="55vh"
+                        onChange={(val) => {
+                            localStorage.setItem(`code-${exercise.id}-${tabIndex}`, val);
+                            codes[tabIndex] = val;
+                            setCodes(codes);
+                        }}
+                        readOnly={readOnly}
+                        theme={theme.palette.mode === 'dark' ? baseDarkTheme : baseLightTheme}
+                        extensions={[
+                            theme.palette.mode === 'dark' ? editorDarkTheme : editorLightTheme,
+                            ...getLanguage(currentLanguage),
+                        ]}
+                    />
+                </div>
+            </div>
 
             <UploadFileConfirmDialog
                 file={uploadFile}

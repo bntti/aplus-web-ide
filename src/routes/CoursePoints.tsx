@@ -33,7 +33,7 @@ const CoursePoints = (): JSX.Element => {
     const totalMaxPoints = coursePoints.modules.reduce((total, module) => total + module.max_points, 0);
     return (
         <>
-            <Stack direction="row" spacing={1} sx={{ mb: 3.5 }}>
+            <Stack direction="row" spacing={1} sx={{ mb: 3.5, mt: 2 }}>
                 <Typography variant="h6">{t('total-points')}</Typography>
                 <Chip
                     label={`${coursePoints.points} / ${totalMaxPoints}`}

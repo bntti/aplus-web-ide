@@ -92,7 +92,7 @@ const CoursePage = (): JSX.Element => {
     if (!chapterId) {
         return (
             <>
-                <Breadcrumbs>
+                <Breadcrumbs sx={{ mt: 2 }}>
                     <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                         {parseTitle(course.name, language)}
                     </Typography>
@@ -119,7 +119,7 @@ const CoursePage = (): JSX.Element => {
     if (chapterHtml === null) return <Typography>{t('loading-page')}</Typography>;
     return (
         <>
-            <Breadcrumbs>
+            <Breadcrumbs sx={{ mt: 2 }}>
                 <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                     {parseTitle(course.name, language)}
                 </Typography>
