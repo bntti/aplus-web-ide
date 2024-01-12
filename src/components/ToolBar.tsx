@@ -78,7 +78,7 @@ const ToolBar = (): JSX.Element => {
                             <MenuItem
                                 onClick={() => {
                                     setAnchorEl(null);
-                                    navigate('/logout');
+                                    navigate('/logout', { state: { userAction: true } });
                                 }}
                             >
                                 <ListItemIcon>

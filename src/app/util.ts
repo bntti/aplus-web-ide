@@ -5,7 +5,7 @@ import { NavigateFunction } from 'react-router-dom';
 export const apiCatcher = (navigate: NavigateFunction, error: AxiosError): never => {
     const details = JSON.parse(error.request.response).detail;
     if (details === 'Invalid token.') {
-        navigate('/logout', { state: { force: true } });
+        navigate('/logout');
         throw new Error('Invalid api Token, redirecting to /logout');
     } else throw error;
 };

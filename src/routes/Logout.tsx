@@ -6,8 +6,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ApiTokenContext, GraderTokenContext, UserContext } from '../app/StateProvider';
 import { auth } from '../app/auth';
 
-const getNeedsConfirm = (state: { force?: boolean }): boolean => {
-    if (state && state.force) return false;
+const getNeedsConfirm = (state: { userAction?: true }): boolean => {
+    if (!state || !state.userAction) return false;
 
     for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);

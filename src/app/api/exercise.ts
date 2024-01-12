@@ -66,7 +66,7 @@ export const getTemplates = async (
                     throw new Error(`Unknown error with grader ${error.response.data}`);
                 }
                 if (isRetry) {
-                    navigate('/logout', { state: { force: true } });
+                    navigate('/logout');
                     throw new Error('Failed to fetch templates with updated grader token, redirecting to logout');
                 }
                 retry = true;
