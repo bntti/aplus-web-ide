@@ -33,13 +33,15 @@ const Login = (): JSX.Element => {
 
     const addApiToken = (event: React.SyntheticEvent): void => {
         event.preventDefault();
-        if (newApiToken.trim().length === 0) {
-            setInvalidToken(true);
-            return;
-        }
 
+        const errors = [
+            'Invalid token.',
+            'Invalid token header. No credentials provided.',
+            'Invalid token header. Token string should not contain spaces.',
+            'Invalid token header. Token string should not contain invalid characters.',
+        ];
         loadUser(newApiToken).catch((error) => {
-            if (error?.response?.data?.detail === 'Invalid token.') setInvalidToken(true);
+            if (errors.includes(error?.response?.data?.detail)) setInvalidToken(true);
             else throw error;
         });
     };
