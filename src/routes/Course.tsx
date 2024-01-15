@@ -8,10 +8,9 @@ import { CourseContext } from '../components/CourseRoot';
 
 const Course = (): JSX.Element => {
     const theme = useTheme();
-    const { courseTree } = useOutletContext<CourseContext>();
     const { courseId } = useParams();
-
     const { language } = useContext(LanguageContext);
+    const { courseTree } = useOutletContext<CourseContext>();
 
     const linkSx: SxProps = {
         textDecoration: 'none',

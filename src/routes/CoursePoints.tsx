@@ -11,7 +11,6 @@ type LoaderData = { coursePoints: CoursePointsData; exercises: Exercises };
 const CoursePoints = (): JSX.Element => {
     const theme = useTheme();
     const { t } = useTranslation();
-
     const { coursePoints, exercises } = useLoaderData() as LoaderData;
     const { courseTree, course } = useOutletContext<CourseContext>();
 
@@ -25,7 +24,7 @@ const CoursePoints = (): JSX.Element => {
     for (const module of courseTree.modules) {
         for (const chapter of module.children) {
             for (const exercise of chapter.children) {
-                exercisePaths[exercise.id] = `${course.id}/${module.id}/${chapter.id}`;
+                exercisePaths[exercise.id] = `${course.id}/${module.id}/${chapter.id}/#${exercise.id}`;
             }
         }
     }

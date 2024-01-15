@@ -26,7 +26,7 @@ const Login = (): JSX.Element => {
         setApiToken(apiToken);
         setUser(newUser);
         setGraderToken(newGraderToken);
-        auth.signIn(apiToken);
+        auth.signIn(apiToken, newGraderToken);
         if (state && state.from) navigate(state.from);
         else navigate('/');
     };

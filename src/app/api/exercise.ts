@@ -114,7 +114,7 @@ export const getMaterialHtml = async (graderToken: GraderToken, chapterName: str
             const element = node as Element;
 
             if (element.classList.contains('exercise')) {
-                if (collector !== '') htmlList.push(collector);
+                htmlList.push(collector);
                 collector = '';
             } else {
                 const attributeNames = element.getAttributeNames();
@@ -128,6 +128,6 @@ export const getMaterialHtml = async (graderToken: GraderToken, chapterName: str
         }
     };
     walkDom(innerDoc.body);
-    if (collector !== '') htmlList.push(collector);
+    htmlList.push(collector);
     return htmlList;
 };

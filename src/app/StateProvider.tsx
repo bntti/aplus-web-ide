@@ -13,7 +13,7 @@ type ApiTokenContext = { apiToken: ContextApiToken; setApiToken: Dispatcher<Cont
 export const ApiTokenContext = createContext<ApiTokenContext>({} as ApiTokenContext);
 
 // GraderToken
-const GraderTokenSchema = z.string();
+export const GraderTokenSchema = z.string();
 export type GraderToken = z.infer<typeof GraderTokenSchema>;
 type ContextGraderToken = GraderToken | null;
 type GraderTokenContext = { graderToken: ContextGraderToken; setGraderToken: Dispatcher<ContextGraderToken> };

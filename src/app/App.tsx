@@ -6,7 +6,8 @@ import { auth } from './auth';
 import CourseRoot from '../components/CourseRoot';
 import Root from '../components/Root';
 import Course from '../routes/Course';
-import CoursePage from '../routes/CoursePage';
+import CourseChapterPage from '../routes/CourseChapterPage';
+import CourseModulePage from '../routes/CourseModulePage';
 import CoursePoints from '../routes/CoursePoints';
 import Home from '../routes/Home';
 import Login from '../routes/Login';
@@ -60,11 +61,12 @@ const router = createBrowserRouter([
                     },
                     {
                         path: ':moduleId?',
-                        element: <RequireAuth outlet={<CoursePage />} />,
+                        element: <RequireAuth outlet={<CourseModulePage />} />,
                     },
                     {
                         path: ':moduleId?/:chapterId',
-                        element: <RequireAuth outlet={<CoursePage />} />,
+                        element: <RequireAuth outlet={<CourseChapterPage />} />,
+                        loader: auth.getChapterHTML.bind(auth),
                     },
                 ],
             },
