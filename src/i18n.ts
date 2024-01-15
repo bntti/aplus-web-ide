@@ -75,6 +75,9 @@ i18n.use(LanguageDetector) // eslint-disable-line import/no-named-as-default-mem
                     'show-code': 'Show code',
                     close: 'Close',
                     'logging-out': 'Logging out...',
+                    'confirm-duplicate-submission-title': 'Identical submission',
+                    'confirm-duplicate-submission-body':
+                        'This submission is identical to the previous submission. Are you sure you want to submit it?',
                 },
             },
             fi: {
@@ -144,6 +147,9 @@ i18n.use(LanguageDetector) // eslint-disable-line import/no-named-as-default-mem
                     'show-code': 'Näytä koodi',
                     close: 'Sulje',
                     'logging-out': 'Kirjaudutaan ulos...',
+                    'confirm-duplicate-submission-title': 'Identtinen palautus',
+                    'confirm-duplicate-submission-body':
+                        'Tämä palautus on identtinen edellisen palautuksen kanssa. Oletko varma että haluat palauttaa sen?',
                 },
             },
         },

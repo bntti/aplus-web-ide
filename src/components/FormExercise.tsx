@@ -4,6 +4,11 @@ import {
     Button,
     Checkbox,
     Container,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     FormControl,
     FormControlLabel,
     FormGroup,
@@ -54,6 +59,7 @@ export type FormExerciseProps =
           points?: null | { [key: string]: { points: number; max_points: number } };
           validationErrors?: null | { [key: string]: string[] };
           readOnly?: false;
+          firstSubmission?: boolean;
       }
     | {
           exercise: ExerciseDataWithInfo;
@@ -64,6 +70,7 @@ export type FormExerciseProps =
           points?: null | { [key: string]: { points: number; max_points: number } };
           validationErrors?: null | { [key: string]: string[] };
           readOnly: true;
+          firstSubmission?: boolean;
       };
 type CheckBoxValues = { [key: string]: { [key: string]: boolean } };
 type FormValues = { [key: string]: string };
@@ -114,6 +121,7 @@ const FormExercise = ({
     points = null,
     validationErrors = null,
     readOnly = false,
+    firstSubmission = true,
 }: FormExerciseProps): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type === 'file')) {
         throw new Error('Tried to pass file type form to FormExercise');
@@ -123,6 +131,7 @@ const FormExercise = ({
     const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
 
+    const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
     const [formValues, setFormValues] = useState<FormValues>(defaultValues.formValues);
     const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
 
@@ -257,8 +266,19 @@ const FormExercise = ({
         if (window?.MathJax !== undefined) window.MathJax.typeset();
     });
 
-    const handleSubmit = (event: React.SyntheticEvent): void => {
-        event.preventDefault();
+    const handleSubmit = (event: React.SyntheticEvent | null, userConfirmed = false): void => {
+        if (event) event.preventDefault();
+
+        if (
+            JSON.stringify(formValues) === JSON.stringify(defaultValues.formValues) &&
+            JSON.stringify(checkboxValues) === JSON.stringify(defaultValues.checkBoxValues) &&
+            !userConfirmed &&
+            !firstSubmission
+        ) {
+            setConfirmationOpen(true);
+            return;
+        }
+        setConfirmationOpen(false);
 
         const formData = new FormData();
         for (const [portionKey, selectedValue] of Object.entries(formValues)) {
@@ -308,6 +328,24 @@ const FormExercise = ({
                     ))}
                 </Alert>
             )}
+            <Dialog open={confirmationOpen} onClose={() => setConfirmationOpen(false)}>
+                <DialogTitle>{t('confirm-duplicate-submission-title')}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{t('confirm-duplicate-submission-body')}</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmationOpen(false)}>{t('cancel')}</Button>
+                    <Button
+                        onClick={() => {
+                            setConfirmationOpen(false);
+                            handleSubmit(null, true);
+                        }}
+                        autoFocus
+                    >
+                        {t('submit-form')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <form onSubmit={handleSubmit}>
                 {portions.map((portion, index) =>
                     portion.type === 'static' ? (

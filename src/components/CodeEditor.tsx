@@ -6,6 +6,11 @@ import { FileDownload, FileUpload } from '@mui/icons-material';
 import {
     Button,
     ButtonGroup,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     FormControl,
     InputLabel,
     MenuItem,
@@ -92,12 +97,14 @@ export type CodeEditorProps =
           callback: (response: AxiosResponse) => void;
           codes?: null | string[];
           readOnly?: false;
+          firstSubmission?: boolean;
       }
     | {
           exercise: ExerciseDataWithInfo;
           callback?: null | ((response: AxiosResponse) => void);
           codes: string[];
           readOnly: true;
+          firstSubmission?: boolean;
       };
 
 const CodeEditor = ({
@@ -105,17 +112,20 @@ const CodeEditor = ({
     callback = null,
     codes: defaultCodes = null,
     readOnly = false,
+    firstSubmission = true,
 }: CodeEditorProps): JSX.Element => {
     if (exercise.exercise_info.form_spec.find((portion) => portion.type !== 'file')) {
         throw new Error("Exercise that wasn't a file was passed to CodeEditor");
     }
     const portions: FileSpec[] = exercise.exercise_info.form_spec as unknown as FileSpec[];
+    const initCodes = getInitCodes(exercise, readOnly, defaultCodes);
 
     const theme = useTheme();
     const { t } = useTranslation();
     const { apiToken } = useContext(ApiTokenContext);
 
-    const [codes, setCodes] = useState<string[]>(getInitCodes(exercise, readOnly, defaultCodes));
+    const [confirmationOpen, setConfirmationOpen] = useState<boolean>(false);
+    const [codes, setCodes] = useState<string[]>(initCodes);
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [languages, setLanguages] = useState<string[]>(guessLanguages(portions));
     const [currentLanguage, setCurrentLanguage] = useState<string>(guessLanguages(portions)[0]);
@@ -131,7 +141,17 @@ const CodeEditor = ({
         }
     }, [codes, defaultCodes, exercise, oldReadOnly, readOnly]);
 
-    const submitCode = (): void => {
+    const submitCode = (userConfirmed = false): void => {
+        let same = true;
+        console.log(codes, initCodes);
+        for (let i = 0; i < portions.length; i++) {
+            if (codes[i] !== initCodes[i]) same = false;
+        }
+        if (same && !userConfirmed && !firstSubmission) {
+            setConfirmationOpen(true);
+            return;
+        }
+
         const formData = new FormData();
         for (let i = 0; i < portions.length; i++) {
             formData.append(portions[i].key, new Blob([codes[i]]));
@@ -175,6 +195,24 @@ const CodeEditor = ({
 
     return (
         <>
+            <Dialog open={confirmationOpen} onClose={() => setConfirmationOpen(false)}>
+                <DialogTitle>{t('confirm-duplicate-submission-title')}</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>{t('confirm-duplicate-submission-body')}</DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setConfirmationOpen(false)}>{t('cancel')}</Button>
+                    <Button
+                        onClick={() => {
+                            setConfirmationOpen(false);
+                            submitCode(true);
+                        }}
+                        autoFocus
+                    >
+                        {t('file-submit')}
+                    </Button>
+                </DialogActions>
+            </Dialog>
             <Tabs
                 TabIndicatorProps={{
                     style: { backgroundColor: '#ffffff00' },
@@ -250,7 +288,7 @@ const CodeEditor = ({
                 </Button>
             ) : (
                 <Stack spacing={2} sx={{ mt: 2 }} direction="row" justifyContent="space-between">
-                    <Button onClick={submitCode} variant="outlined">
+                    <Button onClick={() => submitCode()} variant="outlined">
                         {t('file-submit')}
                     </Button>
                     <ButtonGroup>

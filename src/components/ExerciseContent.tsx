@@ -69,7 +69,13 @@ const ExerciseContent = ({
     };
 
     let codeParams: CodeEditorProps;
-    if (showTemplates) codeParams = { exercise, codes: templates as string[], readOnly: true };
+    if (showTemplates)
+        codeParams = {
+            exercise,
+            codes: templates as string[],
+            readOnly: true,
+            firstSubmission: !latestSubmission,
+        };
     else
         codeParams = {
             exercise,
@@ -79,6 +85,7 @@ const ExerciseContent = ({
                 templates ??
                 (Array(exercise.exercise_info.form_spec.length).fill('') as string[]),
             readOnly: numSubmissions >= exercise.max_submissions,
+            firstSubmission: !latestSubmission,
         };
 
     let formParams: object = {
@@ -87,6 +94,7 @@ const ExerciseContent = ({
         callback,
         validationErrors: validationErrors,
         readOnly: loadingSubmissionResponse || numSubmissions >= exercise.max_submissions,
+        firstSubmission: !latestSubmission,
     };
     if (latestSubmission && latestSubmission.type === 'questionnaire')
         formParams = {
