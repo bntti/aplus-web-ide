@@ -124,7 +124,7 @@ export const getMaterialHtml = async (graderToken: GraderToken, chapterName: str
                 collector += `</${element.tagName}>`;
             }
         } else if (node.nodeType === Node.TEXT_NODE) {
-            collector += (node as Text).textContent || '';
+            collector += ((node as Text).textContent || '').replace(/</g, '&lt').replace(/>/g, '&gt');
         }
     };
     walkDom(innerDoc.body);

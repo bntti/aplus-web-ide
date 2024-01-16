@@ -23,7 +23,7 @@ const CourseModulePage = (): JSX.Element => {
 
     return (
         <>
-            <Breadcrumbs sx={{ mt: 2 }}>
+            <Breadcrumbs sx={{ mt: 2, mb: 1 }}>
                 <Typography sx={{ ...linkSx }} component={Link} to={`/course/${courseId}`}>
                     {parseTitle(course.name, language)}
                 </Typography>

@@ -1,0 +1,70 @@
+.innerhtml {
+    pre {
+        border: solid 1px;
+        border-radius: 1px;
+        padding: 10px;
+        margin: 0px;
+        font-family: monospace;
+        overflow-wrap: break-word;
+        overflow-x: auto;
+        word-break: break-all;
+    }
+    pre code {
+        padding: 0px;
+    }
+    code {
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+    blockquote {
+        border-left: solid 5px;
+        padding-left: 22px;
+        margin: 0px;
+    }
+}
+
+.innerhtml.questionnaire {
+    p {
+        margin: 0;
+    }
+}
+.innerhtml.questionnaire.error {
+    p {
+        color: red;
+    }
+}
+
+.innerhtml.dark {
+    pre {
+        border-color: #333;
+    }
+    pre code {
+        background-color: #0000;
+        color: #fff;
+    }
+    code {
+        background-color: #2c2c2c;
+        color: #eee;
+    }
+    blockquote {
+        border-color: #2c2c2c !important;
+    }
+}
+
+.innerhtml.light {
+    pre {
+        border-color: #ddd;
+    }
+    pre code {
+        background-color: #0000;
+        color: #000;
+    }
+    code {
+        background-color: #f9f2f4;
+        color: #c7254e;
+    }
+    blockquote {
+        border-left-color: rgb(238, 238, 238);
+    }
+}

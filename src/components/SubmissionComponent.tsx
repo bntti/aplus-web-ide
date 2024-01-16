@@ -1,4 +1,4 @@
-import { Box, Container, Paper, Skeleton, Tab, Tabs, Typography } from '@mui/material';
+import { Box, Container, Paper, Skeleton, Tab, Tabs, Typography, useTheme } from '@mui/material';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +11,7 @@ import { SubmissionData } from '../app/api/submissionTypes';
 type Props = { submission: SubmissionData; exercise: ExerciseDataWithInfo | null; codes: string[] | null };
 
 const SubmissionComponent = ({ submission, exercise, codes }: Props): JSX.Element => {
+    const theme = useTheme();
     const { t } = useTranslation();
     const [activeIndex, setActiveIndex] = useState<number>(0);
 
@@ -50,7 +51,10 @@ const SubmissionComponent = ({ submission, exercise, codes }: Props): JSX.Elemen
                     </Box>
                     <TabPanel index={0} value={activeIndex}>
                         <Container component={Paper} sx={{ p: 2 }}>
-                            <div dangerouslySetInnerHTML={{ __html: submission.feedback }} />
+                            <div
+                                className={`innerhtml ${theme.palette.mode}`}
+                                dangerouslySetInnerHTML={{ __html: submission.feedback }}
+                            />
                         </Container>
                     </TabPanel>
                     <TabPanel index={1} value={activeIndex}>

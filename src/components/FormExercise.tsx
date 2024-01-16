@@ -22,6 +22,7 @@ import {
     TextField,
     Typography,
     styled,
+    useTheme,
 } from '@mui/material';
 import axios, { AxiosResponse } from 'axios';
 import { useContext, useEffect, useState } from 'react';
@@ -128,6 +129,7 @@ const FormExercise = ({
     }
     const defaultValues = init(exercise, answers);
 
+    const theme = useTheme();
     const { t } = useTranslation();
     const { language } = useContext(LanguageContext);
 
@@ -136,11 +138,6 @@ const FormExercise = ({
     const [checkboxValues, setcheckboxValues] = useState<CheckBoxValues>(defaultValues.checkBoxValues);
 
     const translate = (value: string): string => translateI18n(value, exercise.exercise_info.form_i18n, language);
-
-    const removeMargins = (value: string, error: boolean): string => {
-        if (error) return value.replace(/<p/g, '<p style="margin:0;color:red"');
-        return value.replace(/<p/g, '<p style="margin:0"');
-    };
 
     const RadioPortion = ({ portion }: { portion: RadioSpec }): JSX.Element => {
         const [localValue, setLocalValue] = useState<string | undefined>(formValues[portion.key]);
@@ -352,6 +349,7 @@ const FormExercise = ({
                         portion.description && (
                             <div
                                 key={portion.key}
+                                className={`innerhtml ${theme.palette.mode}`}
                                 dangerouslySetInnerHTML={{ __html: translate(portion.description) }}
                             />
                         )
@@ -373,19 +371,18 @@ const FormExercise = ({
                             </Stack>
                             {portion.description && (
                                 <div
+                                    className={`innerhtml ${theme.palette.mode} questionnaire ${
+                                        !!validationErrors && portion.key in validationErrors && 'error'
+                                    }`}
                                     style={{ marginTop: 1, marginBottom: 1 }}
-                                    dangerouslySetInnerHTML={{
-                                        __html: removeMargins(
-                                            translate(portion.description),
-                                            !!validationErrors && portion.key in validationErrors,
-                                        ),
-                                    }}
+                                    dangerouslySetInnerHTML={{ __html: translate(portion.description) }}
                                 />
                             )}
                             <Portion portion={portion} error={!!validationErrors && portion.key in validationErrors} />
                             {portion.key in combinedFeedback && combinedFeedback[portion.key].length > 0 && (
                                 <FormHelperText
                                     variant="standard"
+                                    className={`innerhtml ${theme.palette.mode}`}
                                     dangerouslySetInnerHTML={{ __html: combinedFeedback[portion.key].join('\n') }}
                                 />
                             )}
